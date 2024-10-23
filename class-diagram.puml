@@ -1,0 +1,66 @@
+@startuml
+
+class Card {
+    + name
+    - type
+    - dmg
+}
+
+class Deck {
+
+    - Card[]
+    ~ getCardCount()
+    ~ getMonsterCount()
+}
+
+class User {
+    - Deck
+    - coinCount
+    -
+
+}
+
+class SpellCard {
+    + name
+    - type
+    - dmg
+}
+
+class MonsterCard {
+    + name
+    - type
+    - dmg
+}
+
+class BattleDeck {
+    + Card[]
+    ~ CardCount
+}
+
+interface BattleLogic {
+    + compareNormal()
+    + compareElemental()
+
+}
+
+
+class Battlefield {
+    ~ BattleDeckP1
+    ~ BattleDeckP2
+
+
+}
+
+Card <|-- SpellCard
+Card <|-- MonsterCard
+SpellCard o-- Deck
+MonsterCard o-- Deck
+Deck --> BattleDeck : Create new modifiable instance for battles
+Deck *-- User
+
+BattleDeck  *--> Battlefield
+BattleLogic ..|> Battlefield
+
+
+
+@enduml
