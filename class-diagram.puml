@@ -33,7 +33,7 @@ class Main {
     - <<static>> setupRouter() : Router
 }
 
-class IService {
+interface IService {
     + handleRequest()
 }
 
@@ -57,14 +57,7 @@ class Request {
     - headerMap: HeaderMap
     - body: String
     --
-    + getRoute(): String
-    + getUrl(): String
-    + setUrl(): void
-    + getPath(): void
-    + setPath: void
-
-
-
+    <<methods only getter/setter>>
 }
 
 class Response {
@@ -93,16 +86,94 @@ enum ContentType {
 enum RestMethod {
 }
 
+enum DbCredentials {
+    - connectionUrl: String
+    --
+    getConnection(): Connection
+}
+
+class DbAccessException {
+    + DbAccessException(String)
+    + DbAccessException(String, Throwable)
+    + DbAccessException(Throwable)
+
+}
+
+class TransactionUnit {
+    - connection: Connection
+    --
+    + TransactionUnit()
+    + dbCommit(): void
+    + dbRollback(): void
+    + dbFinish(): void
+    + prepareStatement(String): PreparedStatement
+    + close(): void
+}
+
+class Controller {
+    - objectMapper: ObjectMapper
+    --
+    + Controller()
+    + getObjectMapper()
+}
+
+class LoginService {
+    - <<final>> controller: LoginController
+    --
+    + LoginService()
+    + handleRequest(): Response
+
+}
+
+class LoginController {
+    + login(String, String)
+}
+
+class RegistrationSerivce {
+    - <<final>> controller: RegistrationController
+    --
+    + RegistrationService()
+    + handleRequest(Request): Response
+}
+
+class RegistrationController {
+    + register(String, String): Response
+}
+
+class RequestBuilder {
+    + buildRequest(BufferedReader): Request
+    - getMethod(String): RestMethod
+    - setPath(Request, String): void
+}
 
 
-Server *-- Router
-HttpStatus ..> Response
-ContentType ..> Response
-Server *--- Main
-RequestHandler o- Server
-Router *--- RequestHandler
-Response o-- RequestHandler
-HeaderMap *-- Request
+SessionRepository ---o RegistrationController
+RestMethod --> RequestBuilder
+
+RequestBuilder ----o RequestHandler
+LoginController o---- SessionRepository
+LoginService *---- LoginController
+Controller <|---- RegistrationController
+Controller <|---- LoginController
+
+TransactionUnit --* LoginController
+TransactionUnit --* RegistrationController
+
+DbAccessException ---> TransactionUnit
+RegistrationService *---- RegistrationController
+Response ----o LoginService
+IService ....> RegistrationSerivce
+IService ....> LoginService
+DbAccessException ----> DbCredentials
+Server *---- Router
+HttpStatus ....> Response
+ContentType ....> Response
+Server ----* Main
+RequestHandler ----o Server
+Router *---- RequestHandler
+Response ----o RequestHandler
+HeaderMap ----* Request
+RequestHandler o--- Request
 
 
 
