@@ -1,7 +1,7 @@
 package edu.swen1.mtcg.http;
 
 // Define HTTP request methods
-public enum HttpMethod {
+public enum RestMethod {
     GET,
     POST,
     PUT,

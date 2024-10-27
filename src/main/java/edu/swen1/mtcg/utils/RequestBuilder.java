@@ -1,6 +1,6 @@
 package edu.swen1.mtcg.utils;
 
-import edu.swen1.mtcg.http.HttpMethod;
+import edu.swen1.mtcg.http.RestMethod;
 import edu.swen1.mtcg.server.Request;
 
 import java.io.BufferedReader;
@@ -42,8 +42,8 @@ public class RequestBuilder {
 
     }
 
-    private HttpMethod getMethod(String methodString) {
-        return HttpMethod.valueOf(methodString.toUpperCase(Locale.ROOT));
+    private RestMethod getMethod(String methodString) {
+        return RestMethod.valueOf(methodString.toUpperCase(Locale.ROOT));
     }
 
     private void setPath(Request request, String path) {

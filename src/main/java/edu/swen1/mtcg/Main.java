@@ -3,8 +3,8 @@ package edu.swen1.mtcg;
 import edu.swen1.mtcg.server.Server;
 import edu.swen1.mtcg.utils.Router;
 
-import edu.swen1.mtcg.services.RegistrationService;
-import edu.swen1.mtcg.services.ProfileService;
+import edu.swen1.mtcg.services.registration.RegistrationService;
+import edu.swen1.mtcg.services.login.LoginService;
 
 import java.io.IOException;
 
@@ -13,7 +13,7 @@ import java.io.IOException;
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     public static void main(String[] args) {
-        Server server = new Server(43210, setupRouter());
+        Server server = new Server(10001, setupRouter());
         try {
             server.start();
         } catch (IOException e) {
@@ -24,8 +24,8 @@ public class Main {
     private static Router setupRouter() {
 
         Router router = new Router();
-        router.newService("/register", new RegistrationService());
-        // router.newService("/profile", new ProfileService());
+        router.newService("/users", new RegistrationService());
+        router.newService("/sessions", new LoginService());
 
         return router;
 

@@ -1,13 +1,13 @@
 package edu.swen1.mtcg.server;
 
-import edu.swen1.mtcg.http.HttpMethod;
+import edu.swen1.mtcg.http.RestMethod;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
 public class Request {
-    private HttpMethod method;
+    private RestMethod method;
     private String url;
     private String path;
     private List<String> pathParts;
@@ -61,8 +61,8 @@ public class Request {
     public String getBody() { return body; }
     public void setBody(String body) { this.body = body; }
 
-    public HttpMethod getMethod() { return method; }
-    public void setMethod(HttpMethod method) { this.method = method; }
+    public RestMethod getMethod() { return method; }
+    public void setMethod(RestMethod method) { this.method = method; }
 
     public List<String> getPathParts() { return pathParts; }
     public void setPathParts(List<String> pathParts) { this.pathParts = pathParts; }

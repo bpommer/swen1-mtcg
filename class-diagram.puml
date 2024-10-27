@@ -1,65 +1,108 @@
 @startuml
 
-class Card {
-    + name
-    - type
-    - dmg
+class Server {
+    - port: int
+    - router: Router
+    --
+    + Server()
+    + start(): void
 }
 
-class Deck {
-
-    - Card[]
-    ~ getCardCount()
-    ~ getMonsterCount()
-}
-
-class User {
-    - Deck
-    - coinCount
-    -
+class Router {
+    - services: HashMap<String, IService>
+    --
+    + newService(String, IService): void
+    + deleteService(String): void
+    + getService(String): IService
 
 }
 
-class SpellCard {
-    + name
-    - type
-    - dmg
-}
-
-class MonsterCard {
-    + name
-    - type
-    - dmg
-}
-
-class BattleDeck {
-    + Card[]
-    ~ CardCount
-}
-
-interface BattleLogic {
-    + compareNormal()
-    + compareElemental()
-
+class RequestHandler {
+    - socket: Socket
+    - router: Router
+    - out: PrintWriter
+    - in: BufferedReader
+    --
+    + RequestHandler(Socket, Router)
+    + run(): void
 }
 
 
-class Battlefield {
-    ~ BattleDeckP1
-    ~ BattleDeckP2
+class Main {
+    + <<static>> main(String[]) : void
+    - <<static>> setupRouter() : Router
+}
+
+class IService {
+    + handleRequest()
+}
+
+class HeaderMap {
+    + <<static final>> LENGTH_HEADER: String
+    + <<static final>> HEADER_SEPARATOR: String
+    - headers: HashMap<String, String>
+    --
+    + splitLine(String): void
+    + getHeader(String): void
+    + getContentLength(): int
+    + print(): void
+}
+
+class Request {
+    - method: RestMethod
+    - url: String
+    - path: String
+    - pathParts: List<String>
+    - params: String
+    - headerMap: HeaderMap
+    - body: String
+    --
+    + getRoute(): String
+    + getUrl(): String
+    + setUrl(): void
+    + getPath(): void
+    + setPath: void
+
 
 
 }
 
-Card <|-- SpellCard
-Card <|-- MonsterCard
-SpellCard o-- Deck
-MonsterCard o-- Deck
-Deck --> BattleDeck : Create new modifiable instance for battles
-Deck *-- User
+class Response {
+    - statusCode: int
+    - statusMessage: String
+    - contentType: String
+    - body: String
+    --
+    + Response(HttpStatus, ContentType, String)
+    + getMessage(): String
+}
 
-BattleDeck  *--> Battlefield
-BattleLogic ..|> Battlefield
+enum HttpStatus {
+    + <<final>> statusCode: int
+    + <<final>> statusMessage: String
+    --
+    HttpStatus(int, String)
+}
+
+enum ContentType {
+    + <<final>> mimeType: String
+    --
+    + ContentType(String)
+}
+
+enum RestMethod {
+}
+
+
+
+Server *-- Router
+HttpStatus ..> Response
+ContentType ..> Response
+Server *--- Main
+RequestHandler o- Server
+Router *--- RequestHandler
+Response o-- RequestHandler
+HeaderMap *-- Request
 
 
 
