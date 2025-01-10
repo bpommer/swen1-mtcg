@@ -41,7 +41,7 @@ public class RegistrationService implements IService {
             }
         }
 
-        return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Error processing request");
+        return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Error: Bad request");
 
         // Response res = new Response(HttpStatus.OK, ContentType.JSON, resJson);
         //System.out.println("Registration response constructed.\n");

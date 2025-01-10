@@ -36,3 +36,13 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Test script ###
+MonsterTradingCards.sh
+
+### API specification ###
+mtcg-api.yaml
+
+
+
+Todo.txt

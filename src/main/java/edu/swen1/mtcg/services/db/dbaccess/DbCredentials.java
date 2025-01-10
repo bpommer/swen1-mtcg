@@ -7,7 +7,7 @@ import java.sql.SQLException;
 
 public enum DbCredentials {
     INSTANCE;
-    private String connectionUrl = "jdbc:postgresql://localhost:5432/mtcgdb?user=webserver&password=crudaccess";
+    private final String  connectionUrl = "jdbc:postgresql://localhost:5432/mtcgdb?user=webserver&password=crudaccess";
     public Connection getConnection() {
 
         try {

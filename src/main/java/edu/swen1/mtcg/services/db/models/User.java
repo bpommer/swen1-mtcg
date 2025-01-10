@@ -8,7 +8,7 @@ import edu.swen1.mtcg.utils.HashGenerator;
 
 public class User {
 
-    private Integer id;
+    private int id;
     private String username;
     private String password;
     private String salt;

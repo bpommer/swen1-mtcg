@@ -27,11 +27,16 @@ public class RequestBuilder {
             }
 
             if(request.getHeaderMap().getContentLength() > 0) {
+
                 char[] buffer = new char[request.getHeaderMap().getContentLength()];
                 reader.read(buffer, 0, request.getHeaderMap().getContentLength());
                 request.setBody(new String(buffer));
 
             }
+
+
+
+
             System.out.println("RequestBuilder: " + request.getMethod() + " " + request.getPath() + " " + request.getBody());
 
         }

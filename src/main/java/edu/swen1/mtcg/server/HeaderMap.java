@@ -5,6 +5,7 @@ import java.util.Map;
 
 public class HeaderMap {
     public static final String LENGTH_HEADER = "Content-Length";
+    public static final String AUTH_HEADER = "Authorization";
     public static final String HEADER_SEPARATOR = ":";
     private Map<String, String> headers = new HashMap<>();
 
@@ -25,6 +26,15 @@ public class HeaderMap {
 
         return Integer.parseInt(header);
     }
+
+    public String getAuthHeader() {
+        final String header = headers.get(AUTH_HEADER);
+        if (header == null) {
+            return null;
+        }
+        return header;
+    }
+
 
     public void print() {
         System.out.println("HeaderMap: " + headers);

@@ -50,13 +50,19 @@ public class SessionRepository {
 
             try
             {
-                System.out.println(hashPair[0] + " " + hashPair[1] + " " + username);
+                // System.out.println(hashPair[0] + " " + hashPair[1] + " " + username);
                 PreparedStatement stmt = this.transactionUnit.prepareStatement("""
-                        INSERT INTO profile(id,username,password,salt,coins,playcount,elo) VALUES (DEFAULT, ?, ?, ?, DEFAULT, DEFAULT, DEFAULT)
+                        INSERT INTO profile(id,username,password,salt,coins,playcount,elo,token) VALUES (DEFAULT, ?, ?, ?, DEFAULT, DEFAULT, DEFAULT, ?)
                         """);
                 stmt.setString(1, username);
                 stmt.setString(2, hashPair[1]);
                 stmt.setString(3, hashPair[0]);
+
+                String token = "-mtcgToken";
+                token = username + token;
+                stmt.setString(4, token);
+
+
                 int rowCount = stmt.executeUpdate();
                 System.out.println(rowCount + " rows inserted");
                 stmt.close();
@@ -128,9 +134,42 @@ public class SessionRepository {
         } catch(SQLException e) {
             throw new DbAccessException("Could not register user " + username, e);
         }
+    }
 
+    public static ResultSet fetchUserFromToken(String token) throws SQLException {
 
+        String query = "SELECT * FROM profile WHERE token = ?";
 
+        TransactionUnit tempUnit = new TransactionUnit();
+        PreparedStatement stmt = tempUnit.prepareStatement(query);
+
+        try {
+            stmt.setString(1, token);
+            ResultSet rs = stmt.executeQuery();
+            return rs;
+        } catch(SQLException e) {
+            e.printStackTrace();
+
+        }
+        return null;
+    }
+
+    public static ResultSet fetchUserFromName(String username) throws SQLException {
+
+        String query = "SELECT * FROM profile WHERE username = ?";
+
+        TransactionUnit tempUnit = new TransactionUnit();
+        PreparedStatement stmt = tempUnit.prepareStatement(query);
+
+        try {
+            stmt.setString(1, username);
+            ResultSet rs = stmt.executeQuery();
+            return rs;
+        } catch(SQLException e) {
+            e.printStackTrace();
+
+        }
+        return null;
     }
 
 

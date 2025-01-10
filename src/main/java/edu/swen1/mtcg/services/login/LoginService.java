@@ -38,15 +38,18 @@ public class LoginService implements IService {
                 e.printStackTrace();
                 return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Error processing request");
             }
+        }
 
+        else if(request.getMethod() == RestMethod.GET) {
 
+            return new Response(HttpStatus.NOT_FOUND, ContentType.TEXT, "Unauthorized");
 
 
         }
+
         else {
             return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Unauthorized");
         }
-
 
 
         //return new Response(HttpStatus.OK, ContentType.TEXT,

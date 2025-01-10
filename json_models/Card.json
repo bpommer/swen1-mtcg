@@ -1,0 +1,46 @@
+{
+
+  "SampleMonster": {
+    "id": 1,
+    "name": "Big Goblin",
+    "type": "Monster",
+    "damage": 5,
+    "element": "Normal",
+    "special": "Goblin"
+  },
+
+  "SampleSpell": {
+    "id": 2,
+    "name": "Fire Meteor",
+    "type": "Spell",
+    "damage": 4,
+    "element": "Fire",
+    "special": null
+  },
+
+  "SampleDeckEntry": {
+    "deck": [{
+      "id": 1,
+      "name": "Big Goblin",
+      "type": "Monster",
+      "damage": 5,
+      "element": "Normal",
+      "special": "Goblin",
+      "count": 2
+    },{
+      "id": 2,
+      "name": "Fire Meteor",
+      "type": "Spell",
+      "damage": 4,
+      "element": "Fire",
+      "special": null
+    }]
+  }
+
+
+
+
+}
+
+
+

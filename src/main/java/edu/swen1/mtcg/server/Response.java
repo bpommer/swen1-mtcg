@@ -50,4 +50,10 @@ public class Response {
         return res.toString();
     }
 
+    public int getStatusCode() {
+        return statusCode;
+    }
+
+
+
 }
