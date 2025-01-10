@@ -4,13 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.swen1.mtcg.services.db.models.BattleCard;
-import org.postgresql.util.PGobject;
 
 import edu.swen1.mtcg.http.ContentType;
 import edu.swen1.mtcg.http.HttpStatus;
 import edu.swen1.mtcg.server.Response;
-
-import edu.swen1.mtcg.services.db.repository.CardDataRepository;
 
 import edu.swen1.mtcg.services.db.dbaccess.DbAccessException;
 import edu.swen1.mtcg.services.db.dbaccess.TransactionUnit;
@@ -18,14 +15,13 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
 
-import static edu.swen1.mtcg.services.db.repository.CardDataRepository.getHashSet;
+import static edu.swen1.mtcg.services.db.repository.CardDataRepository.getCardHashMap;
 import static edu.swen1.mtcg.utils.HashGenerator.generateHash;
 
 public class PackageRepository {
@@ -45,7 +41,7 @@ public class PackageRepository {
         // Get all card hashes in db and search in hashmap
         String[] deckHashes = new String[pack.length()];
         try {
-            HashSet<String> cardHashes = getHashSet();
+            HashMap<String, String> cardHashes = getCardHashMap();
 
             if(cardHashes.isEmpty()) {
                 for(int i = 0; i < pack.length(); i++) {
@@ -62,7 +58,8 @@ public class PackageRepository {
 
                     JSONObject tempJson = pack.getJSONObject(i);
                     String packHash = generateHash(tempJson.toString());
-                    if(cardHashes.contains(packHash)) {
+                    if(cardHashes.containsKey(tempJson.getString("Id"))
+                            || cardHashes.get(tempJson.getString("Id")).equals(packHash)) {
                         return new Response(HttpStatus.CONFLICT,
                                 ContentType.TEXT, "At least one card in the packages already exists");
                     }

@@ -25,6 +25,16 @@ public class Card {
         this.damage = damage;
     }
 
+    public JSONObject toJSON() {
+        JSONObject cardJson = new JSONObject();
+        cardJson.put("Id", id);
+        cardJson.put("Name", name);
+        cardJson.put("Damage", damage);
+        return cardJson;
+    }
+
+
+
     public String getId() {
         return id;
     }

@@ -4,13 +4,9 @@ package edu.swen1.mtcg.services.db.repository;
 import edu.swen1.mtcg.services.db.dbaccess.TransactionUnit;
 
 
-import org.json.JSONArray;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
-import java.util.HashSet;
+import java.util.HashMap;
 
 
 public class CardDataRepositoryTest {
@@ -25,10 +21,10 @@ public class CardDataRepositoryTest {
 
     public void hashSetTest() {
 
-        HashSet<String> cards = null;
+        HashMap<String, String> cards = null;
 
         try {
-            cards = CardDataRepository.getHashSet();
+            cards = CardDataRepository.getCardHashMap();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

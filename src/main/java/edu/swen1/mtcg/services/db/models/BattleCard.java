@@ -1,5 +1,7 @@
 package edu.swen1.mtcg.services.db.models;
 
+import org.json.JSONObject;
+
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -30,6 +32,7 @@ public class BattleCard extends Card {
     public BattleCard(String id, String name, float damage) {
         super(id, name, damage);
 
+        // Fetch battle-relevant properties and their respective ids as hashmap
         HashMap<String, Integer> typeList = getBattleProperties("cardtype");
         HashMap<String, Integer> specialList = getBattleProperties("specialtype");
         HashMap<String, Integer> elementList = getBattleProperties("element");
@@ -42,6 +45,7 @@ public class BattleCard extends Card {
         }
 
 
+        // Infer properties from hashmap and define default behavior
         for(String type : typeList.keySet()) {
             if(name.contains(type)) {
                 this.type = type;
@@ -50,6 +54,7 @@ public class BattleCard extends Card {
                 break;
             }
         }
+
         if(!typeFound) {
             this.type = "Monster";
             this.typeId = 1;
@@ -64,6 +69,8 @@ public class BattleCard extends Card {
                 break;
             }
         }
+
+        // Set specialId to 0 to signal no special
         if(!specialFound) {
             this.special = null;
             this.specialId = 0;
@@ -90,6 +97,14 @@ public class BattleCard extends Card {
 
 
 
+    }
+    @Override
+    public JSONObject toJSON() {
+        JSONObject obj = super.toJSON();
+        obj.put("Type", type);
+        obj.put("Special", special);
+        obj.put("Element", element);
+        return obj;
     }
 
     public int getTypeId() {return this.typeId;}

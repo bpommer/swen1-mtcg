@@ -9,7 +9,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.HashSet;
 
 public class CardDataRepository {
 
@@ -51,14 +50,15 @@ public class CardDataRepository {
 
     }
 
-    // Generate Hashmaps for integrity checks
-    public static HashSet<String> getHashSet() throws Exception {
+    // Generate Hashset for integrity checks
+    public static HashMap<String, String> getCardHashMap() throws Exception {
 
         String preQuery = "SELECT COUNT(*) FROM card";
-        String query = "SELECT hash FROM card";
+
+        String query = "SELECT id, hash FROM card";
 
         TransactionUnit tempUnit = new TransactionUnit();
-        HashSet<String> hashSet = new HashSet<>();
+        HashMap<String, String> cardMap = new HashMap<>();
 
         // Check if card table contains any entries and if not return empty Hashset
         try(tempUnit) {
@@ -67,7 +67,7 @@ public class CardDataRepository {
 
             if (rs.next()) {
                 if(rs.getInt(1) == 0) {
-                    return hashSet;
+                    return cardMap;
                 }
             }
 
@@ -85,14 +85,14 @@ public class CardDataRepository {
             if (res.next()) {
 
                 do {
-                    hashSet.add(res.getString(1));
+                    cardMap.put(res.getString(1), res.getString(2));
                 } while (res.next());
             }
 
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        return hashSet;
+        return cardMap;
     }
 
 
