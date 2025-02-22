@@ -3,6 +3,7 @@ package edu.swen1.mtcg.server;
 import edu.swen1.mtcg.http.RestMethod;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -11,9 +12,10 @@ public class Request {
     private String url;
     private String path;
     private List<String> pathParts;
-    private String params;
+    private HashMap<String, String> params = new HashMap<>();
     private HeaderMap headerMap = new HeaderMap();
     private String body;
+    public final int PARAM_LIMIT = 5;
 
     public String getRoute() {
         if(this.pathParts == null || this.pathParts.isEmpty()) {
@@ -27,8 +29,8 @@ public class Request {
     public void setUrl(String url) {
         this.url = url;
 
-        if(url.indexOf("?") != -1) {
-            String[] parts = url.split("\\?");
+        if(url.contains("?")) {
+            String[] parts = url.split("\\?", 2);
             this.setPath(parts[0]);
             this.setParams(parts[1]);
         }
@@ -52,11 +54,29 @@ public class Request {
         }
     }
 
-    public String getParams() { return params; }
-    public void setParams(String params) {  this.params = params; }
+    // Create Hashmap for provided params
+    public void setParams(String params) {
+        if(params.contains("=")) {
+            String[] parts = params.split("&", PARAM_LIMIT);
+            for(String part : parts) {
+                if(part != null && !part.isEmpty() && !this.params.containsKey(part)) {
+                    String[] paramParts = part.split("=", 2);
+                    this.params.put(paramParts[0], paramParts[1]);
+                }
+            }
+        }
+        this.params = null;
+    }
 
-    public void setHeaderMap(HeaderMap headerMap) {  this.headerMap = headerMap; }
+    public HashMap<String, String> getParams() { return params; }
+
+
     public HeaderMap getHeaderMap() { return headerMap; }
+
+    public String getHeader(String headerName) {
+        return this.headerMap.getHeader(headerName);
+    }
+
 
     public String getBody() { return body; }
     public void setBody(String body) { this.body = body; }
@@ -65,6 +85,5 @@ public class Request {
     public void setMethod(RestMethod method) { this.method = method; }
 
     public List<String> getPathParts() { return pathParts; }
-    public void setPathParts(List<String> pathParts) { this.pathParts = pathParts; }
 
 }

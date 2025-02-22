@@ -16,7 +16,15 @@ public class RequestBuilder {
         if(line != null) {
             String[] parts = line.split(" ");
 
-            request.setMethod(getMethod(parts[0]));
+            String methodString = parts[0];
+
+            try {
+                request.setMethod(getMethod(parts[0]));
+
+            } catch(IllegalArgumentException iae) {
+                throw new IOException("Illegal request method: " + methodString);
+            }
+
             setPath(request, parts[1]);
 
             line = reader.readLine();
@@ -34,20 +42,12 @@ public class RequestBuilder {
 
             }
 
-
-
-
-            System.out.println("RequestBuilder: " + request.getMethod() + " " + request.getPath() + " " + request.getBody());
-
+            // System.out.println("RequestBuilder: " + request.getMethod() + " " + request.getPath() + " " + request.getBody());
         }
-
-
-
         return request;
-
     }
 
-    private RestMethod getMethod(String methodString) {
+    private RestMethod getMethod(String methodString) throws IllegalArgumentException {
         return RestMethod.valueOf(methodString.toUpperCase(Locale.ROOT));
     }
 
@@ -62,7 +62,7 @@ public class RequestBuilder {
         else {
             request.setPath(path);
             request.setParams(null);
-        }
+         }
 
     }
 

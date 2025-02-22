@@ -84,7 +84,7 @@ public class CardMoverTest {
         CardMover mover = new CardMover(testDeck, testStack);
 
         mover.moveCard(1, this.testDeck, this.testStack);
-        testDeck = mover.getDeck();
+        testDeck = mover.fetchDeck();
         testStack = mover.getStack();
 
         System.out.println("Deck: " + testDeck.toString() + "\n");
@@ -109,7 +109,7 @@ public class CardMoverTest {
 
         assertEquals(0, test);
         assertEquals(3, mover.getStack().getJSONArray("stack").length());
-        assertEquals(4, mover.getDeck().getJSONArray("deck").length());
+        assertEquals(4, mover.fetchDeck().getJSONArray("deck").length());
 
 
 
@@ -134,8 +134,8 @@ public class CardMoverTest {
 
         CardMover mover = new CardMover(testDeck, testStack);
 
-        assertTrue(mover.cardExists(1, mover.getDeck()) > 0);
-        assertFalse(mover.cardExists(5, mover.getDeck()) > 0);
+        assertTrue(mover.cardExists(1, mover.fetchDeck()) > 0);
+        assertFalse(mover.cardExists(5, mover.fetchDeck()) > 0);
 
     }*/
 

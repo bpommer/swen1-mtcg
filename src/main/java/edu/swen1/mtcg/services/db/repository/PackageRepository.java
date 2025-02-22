@@ -11,17 +11,19 @@ import edu.swen1.mtcg.server.Response;
 
 import edu.swen1.mtcg.services.db.dbaccess.DbAccessException;
 import edu.swen1.mtcg.services.db.dbaccess.TransactionUnit;
+import edu.swen1.mtcg.services.db.models.User;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import static edu.swen1.mtcg.services.db.repository.CardDataRepository.getCardHashMap;
+import static edu.swen1.mtcg.services.db.repository.CardDataRepository.getCardHashSet;
 import static edu.swen1.mtcg.utils.HashGenerator.generateHash;
 
 public class PackageRepository {
@@ -41,36 +43,23 @@ public class PackageRepository {
         // Get all card hashes in db and search in hashmap
         String[] deckHashes = new String[pack.length()];
         try {
-            HashMap<String, String> cardHashes = getCardHashMap();
+            HashSet<String> cardHashes = getCardHashSet();
 
-            if(cardHashes.isEmpty()) {
+            // Handling if Hashmap is empty
+            if(!cardHashes.isEmpty()) {
                 for(int i = 0; i < pack.length(); i++) {
 
                     JSONObject tempJson = pack.getJSONObject(i);
-                    System.out.println(tempJson.toString());
-                    String packHash = generateHash(tempJson.toString());
-                    System.out.println(packHash);
-                    deckHashes[i] = packHash;
-                }
-            }
-            else {
-                for(int i = 0; i < pack.length(); i++) {
 
-                    JSONObject tempJson = pack.getJSONObject(i);
-                    String packHash = generateHash(tempJson.toString());
-                    if(cardHashes.containsKey(tempJson.getString("Id"))
-                            || cardHashes.get(tempJson.getString("Id")).equals(packHash)) {
+                    if(cardHashes.contains(tempJson.getString("Id"))) {
                         return new Response(HttpStatus.CONFLICT,
                                 ContentType.TEXT, "At least one card in the packages already exists");
-                    }
-                    else {
-                        deckHashes[i] = packHash;
                     }
                 }
             }
 
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Internal server error");
         }
 
         // Infer type, element and special with BattleCard model
@@ -82,9 +71,10 @@ public class PackageRepository {
                     tempJson.getString("Name"), tempJson.getFloat("Damage")));
         }
 
+        // Register cards in db
         for(int i = 0; i < packList.size(); i++) {
             try {
-                insertCard(packList.get(i), deckHashes[i]);
+                insertCard(packList.get(i));
             } catch (Exception e) {
                 e.printStackTrace();
                 throw new DbAccessException(e.getMessage());
@@ -94,63 +84,40 @@ public class PackageRepository {
         }
 
         // Extract and save IDs as JSON array
-        JSONArray idPack = new JSONArray();
-        for (BattleCard battleCard : packList) {
-            idPack.put(battleCard.getId());
-        }
+
 
         try {
-            addPack(idPack);
+            addPack(pack);
         } catch (Exception e) {
-            throw new DbAccessException(e.getMessage());
+            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Internal server error");
         }
-
         return new Response(HttpStatus.CREATED, ContentType.TEXT, "Package and cards successfully created");
-
 
     }
 
 
-
-    private void addPack(JSONArray pack) {
-
-        /*ObjectMapper mapper = new ObjectMapper();
-        JsonNode node = null;
-
-        try {
-            node = mapper.readTree(pack.toString());
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
-        PGobject packJsonb = new PGobject();
-        packJsonb.setType("jsonb");
-        try {
-            packJsonb.setValue(node.toString());
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }*/
+    // Insert pack into db
+    private void addPack(JSONArray pack) throws Exception {
 
         try {
 
-            String insertQuery = "INSERT INTO pack (content) VALUES (?::jsonb)";
+            String insertQuery = "INSERT INTO pack (content) VALUES (?::json)";
             PreparedStatement stmt = this.transactionUnit.prepareStatement(insertQuery);
             stmt.setString(1, pack.toString());
-            int rowCount = stmt.executeUpdate();
+            stmt.executeUpdate();
             stmt.close();
-
         }
         catch (SQLException e) {
             e.printStackTrace();
-            throw new DbAccessException("Could not insert pack", e);
+            throw new Exception("Could not insert pack", e);
         }
-
 
     }
 
-    private void insertCard(BattleCard card, String cardHash) {
+    // Register card in db
+    private void insertCard(BattleCard card) {
 
-        String query = "INSERT INTO card VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String query = "INSERT INTO card VALUES (?, ?, ?, ?, ?, ?)";
 
         PreparedStatement stmt = this.transactionUnit.prepareStatement(query);
 
@@ -167,70 +134,72 @@ public class PackageRepository {
             else {
                 stmt.setNull(6, java.sql.Types.INTEGER);
             }
-            stmt.setString(7, cardHash);
 
             stmt.executeUpdate();
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-
-
     }
 
 
 
-    private boolean validatePack(JSONArray pack)  {
+    public Response buyPack(User user, int remainingCoins) {
 
-        HashSet<String> validKeys = new HashSet<>();
-        validKeys.add("Id");
-        validKeys.add("Name");
-        validKeys.add("Damage");
+        // Fetch pack from db
+        String query = "SELECT * FROM pack WHERE sold = FALSE ORDER BY RANDOM() LIMIT 1";
+        PreparedStatement stmt = this.transactionUnit.prepareStatement(query);
+        int packId = -1;
 
-        System.out.println(validKeys);
+        ResultSet result = null;
+        JSONArray targetPack = null;
 
-        if(pack.length() != 5) { return false; }
+        try {
+            result = stmt.executeQuery();
+            if(result.next()) {
+                packId = result.getInt(1);
+                targetPack = new JSONArray(result.getString(2));
 
-        for(int i = 0; i < pack.length(); i++) {
-
-            String tempJson = pack.getJSONObject(i).toString();
-
-            System.out.println(tempJson);
-
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode node = null;
-            try {
-                node = mapper.readTree(tempJson);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
+            } else {
+                return new Response(HttpStatus.NOT_FOUND, ContentType.TEXT, "No card package available for buying");
             }
 
-            if(keyWhitelistCheck(node, validKeys)) {
-                JsonNode idNode = node.get("Id");
-                JsonNode nameNode = node.get("Name");
-                JsonNode damageNode = node.get("Damage");
 
-                System.out.println(idNode.toString());
-                System.out.println(nameNode.toString());
-                System.out.println(damageNode.toString());
-
-
-                if(idNode.isTextual() && nameNode.isTextual() && damageNode.isNumber()) {
-                    System.out.println("Type check passed");
-                }
-                else {
-                    System.out.println("Type check failed");
-                    return false;
-                }
-
-            }
-            else {
-                System.out.println("Key not whitelisted");
-                return false;
-            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
-        return true;
+
+        // Add cards from pack to user stack
+        JSONArray userStack = user.getStack();
+        for(int i = 0; i < targetPack.length(); i++) {
+            JSONObject tempJson = targetPack.getJSONObject(i);
+            userStack.put(tempJson);
+        }
+
+        // Set chosen pack to sold
+        String soldQuery = "UPDATE pack SET sold = TRUE WHERE id = ?";
+        stmt = this.transactionUnit.prepareStatement(soldQuery);
+        try {
+            stmt.setInt(1, packId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DbAccessException(e);
+        }
+
+        // Update user stack
+        String updateUserQuery = "UPDATE profile SET coins = ?, stack = ?::json WHERE id = ?";
+        stmt = this.transactionUnit.prepareStatement(updateUserQuery);
+        try {
+            stmt.setInt(1, remainingCoins);
+            stmt.setString(2, userStack.toString());
+            stmt.setInt(3, user.getId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DbAccessException(e);
+        }
+        return new Response(HttpStatus.OK, ContentType.JSON, targetPack.toString());
     }
+
 
     public static boolean keyWhitelistCheck(JsonNode target, HashSet<String> whitelist) {
 

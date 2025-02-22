@@ -1,11 +1,14 @@
 package edu.swen1.mtcg.server;
 
+import edu.swen1.mtcg.http.ContentType;
+
 import java.util.HashMap;
 import java.util.Map;
 
 public class HeaderMap {
     public static final String LENGTH_HEADER = "Content-Length";
     public static final String AUTH_HEADER = "Authorization";
+    public static final String CONTENT_TYPE_HEADER = "Content-Type";
     public static final String HEADER_SEPARATOR = ":";
     private Map<String, String> headers = new HashMap<>();
 
@@ -33,6 +36,22 @@ public class HeaderMap {
             return null;
         }
         return header;
+    }
+    public ContentType getContentType() {
+        final String header = headers.get(CONTENT_TYPE_HEADER);
+        if (header == null) {
+            return null;
+        }
+        switch(header) {
+            case "application/json":
+                return ContentType.JSON;
+            case "text/plain":
+                return ContentType.TEXT;
+            case "text/html":
+                return ContentType.HTML;
+            default:
+                return null;
+        }
     }
 
 

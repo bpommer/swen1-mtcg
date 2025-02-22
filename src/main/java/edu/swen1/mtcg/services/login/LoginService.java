@@ -22,6 +22,8 @@ public class LoginService implements IService {
     @Override
     public Response handleRequest(Request request) {
 
+        String username;
+        String password;
         if(request.getMethod() == RestMethod.POST) {
 
             SessionRepository process = new SessionRepository(new TransactionUnit());
@@ -29,13 +31,17 @@ public class LoginService implements IService {
             try {
                 JsonNode node = mapper.readTree(request.getBody());
 
-                String username = node.get("Username").asText();
-                String password = node.get("Password").asText();
-
-                return process.fetchUser(username, password);
+                username = node.get("Username").asText();
+                password = node.get("Password").asText();
 
             } catch (IOException e) {
                 e.printStackTrace();
+                return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Bad Request");
+            }
+
+            try {
+                return process.fetchUser(username, password);
+            } catch (Exception e) {
                 return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Error processing request");
             }
         }

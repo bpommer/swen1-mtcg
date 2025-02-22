@@ -33,9 +33,8 @@ public class HashGenerator {
             return Base64.getEncoder().encodeToString(hash);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
+            return null;
         }
-        return null;
-
     }
 
     public static String generateSalt() {

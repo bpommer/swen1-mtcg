@@ -7,6 +7,7 @@ import edu.swen1.mtcg.services.db.dbaccess.TransactionUnit;
 import org.junit.jupiter.api.BeforeEach;
 
 import java.util.HashMap;
+import java.util.HashSet;
 
 
 public class CardDataRepositoryTest {
@@ -21,10 +22,10 @@ public class CardDataRepositoryTest {
 
     public void hashSetTest() {
 
-        HashMap<String, String> cards = null;
+        HashSet<String> cards = null;
 
         try {
-            cards = CardDataRepository.getCardHashMap();
+            cards = CardDataRepository.getCardHashSet();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
