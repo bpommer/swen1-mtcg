@@ -25,29 +25,10 @@ public class SessionRepository {
         this.transactionUnit = transactionUnit;
     }
 
-    // Check if user exists
-    public boolean checkUser(String username) {
-        try (PreparedStatement stmt = this.transactionUnit.prepareStatement("""
-                        SELECT COUNT(*) FROM profile WHERE username = ?
-                        """))
-        {
-            stmt.setString(1, username);
-            ResultSet rs = stmt.executeQuery();
-            if(rs.next()) {
-                int count = rs.getInt(1);
-                return (count == 0);
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-
-        }
-        return false;
-    }
 
     // POST /users
     public Response registerUser(String username, String password) {
-        if(checkUser(username)) {
+
             String[] hashPair;
             hashPair = HashGenerator.generateHashPair(password);
             String token = username + "-mtcgToken";
@@ -59,75 +40,20 @@ public class SessionRepository {
                         INSERT INTO profile(id, username, password, salt, coins, playcount, elo, token, stack, deck, bio, image, wins, lastlogin)
                         VALUES (DEFAULT, ?, ?, ?, DEFAULT, DEFAULT, DEFAULT, ?, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT)
                        """);
-                JSONArray emptyArray = new JSONArray();
-
-
 
                 stmt.setString(1, username);
                 stmt.setString(2, hashPair[1]);
                 stmt.setString(3, hashPair[0]);
                 stmt.setString(4, hashedToken);
 
-                int rowCount = stmt.executeUpdate();
-                stmt.close();
+                stmt.executeUpdate();
                 return new Response(HttpStatus.CREATED, ContentType.TEXT, "User successfully created");
             } catch(SQLException e) {
                 e.printStackTrace();
                 return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Internal server error");
-
             }
-        }
-        else {
-            return new Response(HttpStatus.CONFLICT, ContentType.TEXT, "User with same username already registered");
-        }
-
     }
 
-    // GET /users/{username}
-    public Response fetchUser(String username, String password) {
-
-        try (PreparedStatement stmt = this.transactionUnit.prepareStatement("""
-                        SELECT id, username, password, salt, coins, playcount, elo FROM profile WHERE username = ?
-                        """))
-        {
-            stmt.setString(1, username);
-            ResultSet rs = stmt.executeQuery();
-            User profile = null;
-
-            if(rs.next()) {
-                do {
-                    profile = new User(
-                            rs.getInt(1),
-                            rs.getString(2),
-                            rs.getString(3),
-                            rs.getString(4),
-                            rs.getInt(5),
-                            rs.getInt(6),
-                            rs.getInt(7)
-                    );
-                } while(rs.next());
-            } else {
-                return new Response(HttpStatus.NOT_FOUND, ContentType.TEXT, "User not found");
-            }
-
-
-
-
-            assert profile != null;
-            String hashControl = HashGenerator.generateHash(password + profile.getSalt());
-
-            // Get token based on password salt
-            if(Objects.equals(hashControl, profile.getPassword())) {
-                return new Response(HttpStatus.OK, ContentType.JSON, profile.getUserData().toString());
-            }
-            else {
-                return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Invalid credentials");
-            }
-
-        } catch(SQLException e) {
-            throw new DbAccessException("Could not register user " + username, e);
-        }
-    }
 
     // PUT /users/{username}
     public Response updateUser(String username, String name, String bio, String image) {

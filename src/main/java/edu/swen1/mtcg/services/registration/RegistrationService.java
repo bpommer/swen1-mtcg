@@ -33,17 +33,20 @@ public class RegistrationService implements IService {
 
 
         if (request.getMethod() == RestMethod.POST) {
-            ObjectMapper mapper = new ObjectMapper();
-            try {
-                JsonNode node = mapper.readTree(request.getBody());
-                Set<String> jsonKeys = mapper.convertValue(node, Set.class);
+            if(!RequestSchemaChecker.JsonKeyValueCheck(request.getBody(), SchemaWhitelists.USER_CREDENTIALS)) {
+                return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Bad Request");
+            }
 
-                if(!RequestSchemaChecker.JsonKeyValueCheck(request.getBody(), SchemaWhitelists.USER_CREDENTIALS)) {
-                    return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Bad Request");
+            try {
+
+                JSONObject credentials = new JSONObject(request.getBody());
+                String username = credentials.getString("Username");
+                String password = credentials.getString("Password");
+
+                if(SessionRepository.fetchUserFromName(username) != null) {
+                    return new Response(HttpStatus.CONFLICT, ContentType.TEXT, "User already exists");
                 }
 
-                String username = node.get("Username").asText();
-                String password = node.get("Password").asText();
 
                 return controller.register(username, password);
 
@@ -64,21 +67,19 @@ public class RegistrationService implements IService {
 
             List<String> path = request.getPathParts();
             String authToken = request.getHeaderMap().getAuthHeader();
-            String targetUser = null;
 
             if(path.size() == 2 && authToken != null) {
 
-                targetUser = path.get(1);
+                String targetUser = path.get(1);
+                User foundUser = SessionRepository.fetchUserFromToken(authToken);
 
-                User foundUser = null;
-                foundUser = SessionRepository.fetchUserFromToken(authToken);
-
-                if(foundUser != null && (foundUser.getUsername().equals(targetUser) || foundUser.getUsername().equals("admin"))) {
+                if(foundUser != null &&
+                        (foundUser.getUsername().equals(targetUser) || foundUser.getUsername().equals("admin"))
+                ) {
                     return controller.getUser(targetUser);
                 } else {
                     return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Authentication token required");
                 }
-
 
             }
             else if (path.size() == 2) {
@@ -92,20 +93,16 @@ public class RegistrationService implements IService {
 
             List<String> path = request.getPathParts();
             String authToken = request.getHeaderMap().getAuthHeader();
-            String targetUser = null;
 
             if(path.size() == 2 && authToken != null) {
 
-                targetUser = path.get(1);
-
+                String targetUser = path.get(1);
                 User foundUser = SessionRepository.fetchUserFromToken(authToken);
 
-                if(foundUser != null && (
-                        foundUser.getUsername().equals(targetUser)
-                        || foundUser.getUsername().equals("admin")
-                    )
-                    && RequestSchemaChecker.JsonKeyValueCheck(request.getBody(), SchemaWhitelists.USER_DATA)
-                ) {
+                if(foundUser != null && (foundUser.getUsername().equals(targetUser)
+                        || foundUser.getUsername().equals("admin"))
+                    && RequestSchemaChecker.JsonKeyValueCheck(request.getBody(), SchemaWhitelists.USER_DATA)) {
+
                     JSONObject data = new JSONObject(request.getBody());
 
 

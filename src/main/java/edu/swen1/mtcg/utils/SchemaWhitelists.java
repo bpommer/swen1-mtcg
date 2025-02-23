@@ -12,12 +12,13 @@ public enum SchemaWhitelists {
             Map.entry("Bio", FieldValueType.STRING),
             Map.entry("Image", FieldValueType.STRING)
     )),
-    USER_STATS(Map.ofEntries(
+    // Not applicable
+    /*USER_STATS(Map.ofEntries(
             Map.entry("Name", FieldValueType.STRING),
             Map.entry("Elo", FieldValueType.INTEGER),
             Map.entry("Wins", FieldValueType.INTEGER),
             Map.entry("Losses", FieldValueType.INTEGER)
-    )),
+    )),*/
     CARD(Map.ofEntries(
             Map.entry("Id", FieldValueType.STRING),
             Map.entry("Name", FieldValueType.STRING),

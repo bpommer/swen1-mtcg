@@ -1,5 +1,6 @@
 package edu.swen1.mtcg.utils;
 
+import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -60,38 +61,86 @@ public class RequestSchemaCheckerTest {
     }
 
     @Test
-    public void invalidUserCredentials() {
+    public void invalidObjects() {
         assertFalse(RequestSchemaChecker.JsonKeyValueCheck(userCredentialsTest2, SchemaWhitelists.USER_CREDENTIALS));
         assertFalse(RequestSchemaChecker.JsonKeyValueCheck(userCredentialsTest3, SchemaWhitelists.USER_CREDENTIALS));
         assertFalse(RequestSchemaChecker.JsonKeyValueCheck(userCredentialsTest4, SchemaWhitelists.USER_CREDENTIALS));
         assertFalse(RequestSchemaChecker.JsonKeyValueCheck(userCredentialsTest5, SchemaWhitelists.USER_CREDENTIALS));
-    }
 
-    @Test
-    public void invalidUserData() {
         assertFalse(RequestSchemaChecker.JsonKeyValueCheck(userDataTest2, SchemaWhitelists.USER_DATA));
         assertFalse(RequestSchemaChecker.JsonKeyValueCheck(userDataTest3, SchemaWhitelists.USER_DATA));
         assertFalse(RequestSchemaChecker.JsonKeyValueCheck(userDataTest4, SchemaWhitelists.USER_DATA));
         assertFalse(RequestSchemaChecker.JsonKeyValueCheck(userDataTest5, SchemaWhitelists.USER_DATA));
-    }
 
-    @Test
-    public void invalidCard() {
         assertFalse(RequestSchemaChecker.JsonKeyValueCheck(cardTest2, SchemaWhitelists.CARD));
         assertFalse(RequestSchemaChecker.JsonKeyValueCheck(cardTest3, SchemaWhitelists.CARD));
         assertFalse(RequestSchemaChecker.JsonKeyValueCheck(cardTest4, SchemaWhitelists.CARD));
         assertFalse(RequestSchemaChecker.JsonKeyValueCheck(cardTest5, SchemaWhitelists.CARD));
-    }
 
-    @Test
-    public void invalidTradingDeal() {
         assertFalse(RequestSchemaChecker.JsonKeyValueCheck(tradingDealTest2, SchemaWhitelists.TRADEDEAL));
         assertFalse(RequestSchemaChecker.JsonKeyValueCheck(tradingDealTest3, SchemaWhitelists.TRADEDEAL));
         assertFalse(RequestSchemaChecker.JsonKeyValueCheck(tradingDealTest4, SchemaWhitelists.TRADEDEAL));
         assertFalse(RequestSchemaChecker.JsonKeyValueCheck(tradingDealTest5, SchemaWhitelists.TRADEDEAL));
     }
 
+    @Test
+    public void invalidUserCredentials() {
+        JSONObject credentials = new JSONObject(userCredentialsTest);
+        credentials.put("Username", 15);
+        assertFalse(RequestSchemaChecker.JsonKeyValueCheck(credentials.toString(), SchemaWhitelists.USER_CREDENTIALS));
 
+        credentials = new JSONObject(userCredentialsTest);
+        credentials.put("Password", true);
+        assertFalse(RequestSchemaChecker.JsonKeyValueCheck(credentials.toString(), SchemaWhitelists.USER_CREDENTIALS));
+    }
 
+    @Test
+    public void invalidUserData() {
+        JSONObject userdata = new JSONObject(userDataTest);
+        userdata.put("Name", true);
+        assertFalse(RequestSchemaChecker.JsonKeyValueCheck(userdata.toString(), SchemaWhitelists.USER_DATA));
 
+        userdata = new JSONObject(userDataTest);
+        userdata.put("Bio", 15);
+        assertFalse(RequestSchemaChecker.JsonKeyValueCheck(userdata.toString(), SchemaWhitelists.USER_DATA));
+
+        userdata = new JSONObject(userDataTest);
+        userdata.put("Image", 12.34);
+        assertFalse(RequestSchemaChecker.JsonKeyValueCheck(userdata.toString(), SchemaWhitelists.USER_DATA));
+    }
+
+    @Test
+    public void invalidCard() {
+        JSONObject card = new JSONObject(cardTest);
+        card.put("Id", false);
+        assertFalse(RequestSchemaChecker.JsonKeyValueCheck(card.toString(), SchemaWhitelists.CARD));
+
+        card = new JSONObject(cardTest);
+        card.put("Name", 15);
+        assertFalse(RequestSchemaChecker.JsonKeyValueCheck(card.toString(), SchemaWhitelists.CARD));
+
+        card = new JSONObject(cardTest);
+        card.put("Damage", true);
+        assertFalse(RequestSchemaChecker.JsonKeyValueCheck(card.toString(), SchemaWhitelists.CARD));
+    }
+
+    @Test
+    public void invalidTradingDeal() {
+        JSONObject trade = new JSONObject(tradingDealTest);
+        trade.put("Id", false);
+        assertFalse(RequestSchemaChecker.JsonKeyValueCheck(trade.toString(), SchemaWhitelists.TRADEDEAL));
+
+        trade = new JSONObject(tradingDealTest);
+        trade.put("CardToTrade", 12);
+        assertFalse(RequestSchemaChecker.JsonKeyValueCheck(trade.toString(), SchemaWhitelists.TRADEDEAL));
+
+        trade = new JSONObject(tradingDealTest);
+        trade.put("Type", true);
+        assertFalse(RequestSchemaChecker.JsonKeyValueCheck(trade.toString(), SchemaWhitelists.TRADEDEAL));
+
+        trade = new JSONObject(tradingDealTest);
+        trade.put("MinimumDamage", "test");
+        assertFalse(RequestSchemaChecker.JsonKeyValueCheck(trade.toString(), SchemaWhitelists.TRADEDEAL));
+
+    }
 }

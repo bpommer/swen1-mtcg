@@ -36,9 +36,8 @@ public class DeckService implements IService {
 
             User user = SessionRepository.fetchUserFromToken(token);
             if(user == null) {
-                return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Bad Request");
-            }
-            if(validUserToken(user.getUsername(), token)) {
+                return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Unauthorized");
+            } else {
                 try {
                     Response res = controller.fetchDeck(user.getId(), params);
                     return res;
@@ -46,8 +45,6 @@ public class DeckService implements IService {
                     return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Internal Server Error");
 
                 }
-            } else {
-                return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Unauthorized");
             }
 
         }
@@ -61,7 +58,7 @@ public class DeckService implements IService {
             User user = null;
             user = fetchUserFromToken(token);
 
-            if(user == null || !validUserToken(user.getUsername(), token)) {
+            if(user == null) {
                 return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT,
                         "Access token is missing or invalid");
             }
