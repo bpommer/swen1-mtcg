@@ -133,11 +133,13 @@ CREATE TABLE profile
     -- Implementation WIP
     stack JSONB DEFAULT '[]'::jsonb NOT NULL,
     deck JSONB DEFAULT '[]'::jsonb NOT NULL,
+    name TEXT default NULL,
     bio TEXT DEFAULT NULL,
     image TEXT DEFAULT NULL,
     wins int DEFAULT 0 NOT NULL,
     lastlogin timestamp DEFAULT NOW() NOT NULL
 );
+
 
 GRANT SELECT, INSERT, UPDATE ON profile TO webserver;
 GRANT ALL ON profile TO dbadmin;

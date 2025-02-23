@@ -59,10 +59,6 @@ public class TradingController extends Controller {
     public Response revokeTradeOffer(User user, Request request) {
         TransactionUnit transactionUnit = new TransactionUnit();
 
-        try {
-            Response res = new TradeRepository(transactionUnit).deleteTrade(user, )
-        }
-
 
 
 
