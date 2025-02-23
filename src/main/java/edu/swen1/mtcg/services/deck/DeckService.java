@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import static edu.swen1.mtcg.utils.TokenAuthenticator.validUserToken;
 import static edu.swen1.mtcg.services.db.repository.SessionRepository.fetchUserFromToken;
 
 public class DeckService implements IService {

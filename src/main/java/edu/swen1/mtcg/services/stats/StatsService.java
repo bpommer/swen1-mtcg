@@ -8,7 +8,6 @@ import edu.swen1.mtcg.server.Request;
 import edu.swen1.mtcg.server.Response;
 import edu.swen1.mtcg.services.db.models.User;
 import edu.swen1.mtcg.services.db.repository.SessionRepository;
-import edu.swen1.mtcg.utils.TokenAuthenticator;
 import org.json.JSONObject;
 
 public class StatsService implements IService {
@@ -18,13 +17,10 @@ public class StatsService implements IService {
         if(request.getMethod() == RestMethod.GET) {
             String authToken = request.getHeaderMap().getAuthHeader();
 
-            String[] split = authToken.split(" ", 2);
-
-
             User foundUser = null;
-            foundUser = SessionRepository.fetchUserFromToken(split[1]);
+            foundUser = SessionRepository.fetchUserFromToken(authToken);
 
-            if(foundUser == null || !TokenAuthenticator.validUserToken(foundUser.getUsername(), authToken)) {
+            if(foundUser == null) {
                 return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Access token missing or invalid");
             }
 

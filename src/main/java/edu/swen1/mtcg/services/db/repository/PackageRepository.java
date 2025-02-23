@@ -35,7 +35,7 @@ public class PackageRepository {
     public Response registerPackage(JSONArray pack) {
 
         // Validate pack format and check for existing entry
-        if(!validatePack(pack)) {
+        if(true) {
             System.out.println("Package validation failed");
             return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "");
         }

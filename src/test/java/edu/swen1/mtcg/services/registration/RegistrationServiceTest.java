@@ -1,87 +1,167 @@
 package edu.swen1.mtcg.services.registration;
 
+import edu.swen1.mtcg.http.ContentType;
 import edu.swen1.mtcg.http.HttpStatus;
 import edu.swen1.mtcg.http.RestMethod;
 import edu.swen1.mtcg.server.Request;
 import edu.swen1.mtcg.server.Response;
+import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 
+import java.lang.reflect.Field;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class RegistrationServiceTest {
 
-    Request adminMock;
-    Request userMock;
-    Request errorMock;
+    RegistrationService service = new RegistrationService();
 
-    RegistrationService registrationService;
+    @InjectMocks
+    RegistrationController mockController = mock(RegistrationController.class);
+
+
+    String registrationTestBody = new JSONObject()
+            .put("Username", "testUser")
+            .put("Password", "testPassword")
+            .toString();
+
+    String registrationInvalidType1 = new JSONObject()
+            .put("Username", 123)
+            .put("Password", "testPassword")
+            .toString();
+
+    String registrationInvalidType2 = new JSONObject()
+            .put("Username", "testUser")
+            .put("Password", true)
+            .toString();
+
+    String registrationInvalidType3 = new JSONObject()
+            .put("Username", 123.45)
+            .toString();
+
+    String updateTestBody1 = new JSONObject()
+            .put("Name", "test")
+            .put("Bio", "testBio")
+            .put("Image", "testImage")
+            .toString();
+
+    // empty field
+    String updateTestBody2 = new JSONObject()
+            .put("Name", "")
+            .put("Bio", "testBio")
+            .put("Image", "testImage")
+            .toString();
+
+
 
     @BeforeEach
     public void setup() {
-        registrationService = new RegistrationService();
-        this.adminMock = new Request();
-        this.userMock = new Request();
-        this.errorMock = new Request();
+
+        // Fetch controller attribute from class
+        // and inject mock
+
+        Field field = null;
+        try {
+            field = RegistrationService.class.getDeclaredField("controller");
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException(e);
+        }
+
+        field.setAccessible(true);
+
+        try {
+            field.set(service, mockController);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
 
     }
 
 
     // Test user registration
     @Test
-    public void registerUser() {
-
-        this.adminMock.setMethod(RestMethod.POST);
-        this.adminMock.setBody("{\"Username\":\"admin\",    \"Password\":\"istrator\"}");
-
-        this.userMock.setMethod(RestMethod.POST);
-        this.userMock.setBody("{\"Username\":\"kienboec\", \"Password\":\"different\"}");
+    @DisplayName("Register with properly formatted request")
+    public void testUserRegistration() {
 
 
-        Response testResponse;
-        testResponse = registrationService.handleRequest(adminMock);
-        assertEquals(HttpStatus.CREATED.statusCode, testResponse.getStatusCode());
+        when(mockController.register(any(), any()))
+                .thenReturn(new Response(
+                        HttpStatus.CREATED,
+                        ContentType.TEXT,
+                        "User successfully created"
+                )
+        );
 
-        testResponse = registrationService.handleRequest(userMock);
-        assertEquals(HttpStatus.CREATED.statusCode, testResponse.getStatusCode());
+        Request testRequest = new Request();
+        testRequest.setMethod(RestMethod.POST);
+        testRequest.setBody(registrationTestBody);
 
-
-
-        // Duplicate registration
-        testResponse = registrationService.handleRequest(userMock);
-        assertEquals(HttpStatus.CONFLICT.statusCode, testResponse.getStatusCode());
+        Response res = service.handleRequest(testRequest);
+        assertEquals(HttpStatus.CREATED.statusCode, res.getStatusCode());
     }
 
 
 
     @Test
-    public void shouldFail() {
+    public void failUserRegistration() {
 
-        // Check conflict
-        this.adminMock.setMethod(RestMethod.POST);
-        this.adminMock.setBody("{\"Username\":\"admin\",    \"Password\":\"istrator\"}");;
+        Request testRequest = new Request();
+        testRequest.setMethod(RestMethod.POST);
+        testRequest.setBody(registrationInvalidType1);
 
-        Response testResponse;
-        testResponse = registrationService.handleRequest(adminMock);
-        assertEquals(HttpStatus.CONFLICT.statusCode, testResponse.getStatusCode());
+        Response res = service.handleRequest(testRequest);
+        assertEquals(HttpStatus.BAD_REQUEST.statusCode, res.getStatusCode());
 
-        // Check bad keys
-        this.errorMock.setMethod(RestMethod.POST);
-        this.errorMock.setBody("{\"Usename\":\"admin\",    \"Password\":\"istrator\"}");;
+        testRequest = new Request();
+        testRequest.setMethod(RestMethod.POST);
+        testRequest.setBody(registrationInvalidType2);
 
-        testResponse = registrationService.handleRequest(errorMock);
-        assertEquals(HttpStatus.BAD_REQUEST.statusCode, testResponse.getStatusCode());
+        res = service.handleRequest(testRequest);
+        assertEquals(HttpStatus.BAD_REQUEST.statusCode, res.getStatusCode());
 
-        // Check additional keys
-        this.errorMock.setMethod(RestMethod.POST);
-        this.errorMock.setBody("{\"Username\":\"admin\",    \"Password\":\"istrator\", \"aaa\":\"bbb\"}");;
+        testRequest = new Request();
+        testRequest.setMethod(RestMethod.POST);
+        testRequest.setBody(registrationInvalidType3);
 
-        testResponse = registrationService.handleRequest(errorMock);
-        assertEquals(HttpStatus.BAD_REQUEST.statusCode, testResponse.getStatusCode());
+        res = service.handleRequest(testRequest);
+        assertEquals(HttpStatus.BAD_REQUEST.statusCode, res.getStatusCode());
 
     }
+
+    @Test
+    public void testUserUpdate() {
+
+        when(mockController.updateUser(any(), any(), any(), any()))
+                .thenReturn(new Response(
+                                HttpStatus.OK,
+                                ContentType.TEXT,
+                                "User sucessfully updated."
+                        )
+                );
+
+        Request testRequest = new Request();
+        testRequest.setMethod(RestMethod.PUT);
+        testRequest.setBody(updateTestBody1);
+        testRequest.setPath("/users/testUser");
+
+        Response res = service.handleRequest(testRequest);
+        assertEquals(HttpStatus.OK.statusCode, res.getStatusCode());
+
+
+
+
+
+    }
+
+
+
 
 
 }

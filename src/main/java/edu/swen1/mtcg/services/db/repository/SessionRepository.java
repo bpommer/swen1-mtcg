@@ -48,15 +48,16 @@ public class SessionRepository {
     // POST /users
     public Response registerUser(String username, String password) {
         if(checkUser(username)) {
-            String[] hashPair = new String[2];
+            String[] hashPair;
             hashPair = HashGenerator.generateHashPair(password);
+            String token = username + "-mtcgToken";
+            String hashedToken = HashGenerator.generateHash(token);
 
-            try
-            {
+            try {
                 // System.out.println(hashPair[0] + " " + hashPair[1] + " " + username);
                 PreparedStatement stmt = this.transactionUnit.prepareStatement("""
                         INSERT INTO profile(id, username, password, salt, coins, playcount, elo, token, stack, deck, bio, image, wins, lastlogin)
-                        VALUES (DEFAULT, ?, ?, ?, DEFAULT, DEFAULT, DEFAULT, ?, ?, ?, DEFAULT, DEFAULT, DEFAULT, DEFAULT)
+                        VALUES (DEFAULT, ?, ?, ?, DEFAULT, DEFAULT, DEFAULT, ?, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT)
                        """);
                 JSONArray emptyArray = new JSONArray();
 
@@ -65,32 +66,16 @@ public class SessionRepository {
                 stmt.setString(1, username);
                 stmt.setString(2, hashPair[1]);
                 stmt.setString(3, hashPair[0]);
-
-
-                String token = "-mtcgToken";
-                token = username + token;
-
-                token = HashGenerator.generateHash(token);
-                stmt.setString(4, token);
-                stmt.setObject(5, emptyArray.toString(), java.sql.Types.OTHER);
-                stmt.setObject(6, emptyArray.toString(), java.sql.Types.OTHER);
+                stmt.setString(4, hashedToken);
 
                 int rowCount = stmt.executeUpdate();
-                System.out.println(rowCount + " rows inserted");
                 stmt.close();
-
-
-
-                return new Response(HttpStatus.CREATED, ContentType.JSON, "User successfully created");
-
-
+                return new Response(HttpStatus.CREATED, ContentType.TEXT, "User successfully created");
             } catch(SQLException e) {
                 e.printStackTrace();
                 return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Internal server error");
 
             }
-
-
         }
         else {
             return new Response(HttpStatus.CONFLICT, ContentType.TEXT, "User with same username already registered");
@@ -145,54 +130,47 @@ public class SessionRepository {
     }
 
     // PUT /users/{username}
-    public Response updateUser(String username, String bio, String image) {
-        String query = "UPDATE profile SET bio = ?, image = ? WHERE username = ?";
+    public Response updateUser(String username, String name, String bio, String image) {
 
-        User preRes = null;
-        try {
-            preRes = fetchUserFromName(username);
-            if(preRes != null) {
+        User searchUser = fetchUserFromName(username);
+        if(searchUser == null) {
+            return new Response(HttpStatus.NOT_FOUND, ContentType.TEXT, "User not found");
+        }
 
-                try (PreparedStatement stmt = this.transactionUnit.prepareStatement(query)) {
-                    stmt.setString(1, bio);
-                    stmt.setString(2, image);
-                    stmt.setString(3, username);
-                    int rowCount = stmt.executeUpdate();
-                    stmt.close();
+        String query = "UPDATE profile SET name = ?, bio = ?, image = ? WHERE username = ?";
 
-                    return new Response(HttpStatus.OK, ContentType.TEXT, "User successfully updated.");
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Internal server error.");
-                }
-
-            } else {
-                return new Response(HttpStatus.NOT_FOUND, ContentType.TEXT, "User not found.");
-            }
-
+        try (PreparedStatement stmt = this.transactionUnit.prepareStatement(query)) {
+            stmt.setString(1, name);
+            stmt.setString(2, bio);
+            stmt.setString(4, image);
+            stmt.setString(4, username);
+            stmt.executeUpdate();
+            return new Response(HttpStatus.OK, ContentType.TEXT, "User successfully updated.");
         } catch (SQLException e) {
             e.printStackTrace();
-            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.JSON, "Internal server error");
+            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Internal server error.");
         }
     }
 
-
+    // Fetch user data from token
+    // Returns null if token is invalid or user does not exist
     public static User fetchUserFromToken(String token) {
+        String[] splitToken = token.split(" ", 2);
 
+        if(!splitToken[0].equals("Bearer")) {
+            return null;
+        }
 
-        String tokenHash = HashGenerator.generateHash(token);
-
+        String tokenHash = HashGenerator.generateHash(splitToken[1]);
         String query = "SELECT * FROM profile WHERE token = ?";
 
         TransactionUnit tempUnit = new TransactionUnit();
         PreparedStatement stmt = tempUnit.prepareStatement(query);
 
         try {
-            stmt.setString(1, token);
+            stmt.setString(1, tokenHash);
             ResultSet rs = stmt.executeQuery();
             if(rs.next()) {
-
                 User foundUser = new User(
                         rs.getInt(1),
                         rs.getString(2),
@@ -210,18 +188,14 @@ public class SessionRepository {
                 return foundUser;
             }
             return null;
-
-
         } catch(SQLException e) {
             e.printStackTrace();
             return null;
-
-
         }
 
     }
 
-    public static User fetchUserFromName(String username) throws SQLException {
+    public static User fetchUserFromName(String username) {
 
         String query = "SELECT * FROM profile WHERE username = ?";
 
@@ -245,14 +219,15 @@ public class SessionRepository {
                         rs.getString(10),
                         rs.getString(11),
                         rs.getString(12),
-                        rs.getInt(13));
+                        rs.getInt(13)
+                );
+            } else {
+                return null;
             }
-            return null;
         } catch(SQLException e) {
             e.printStackTrace();
-
+            return null;
         }
-        return null;
     }
 
     public static User fetchUserFromId(int id) {

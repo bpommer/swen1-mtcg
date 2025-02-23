@@ -12,7 +12,6 @@ import edu.swen1.mtcg.server.Response;
 import edu.swen1.mtcg.services.db.models.TradingDeal;
 import edu.swen1.mtcg.services.db.models.User;
 
-import edu.swen1.mtcg.utils.TokenAuthenticator;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -33,32 +32,19 @@ public class TradingService implements IService {
     public Response handleRequest(Request request) {
         if(request.getMethod() == RestMethod.GET) {
             String token = request.getHeader("Authorization");
-            String params = request.getParams();
+            HashMap<String, String> params = request.getParams();
 
 
-
-            String[] split = request.getHeader("Authorization").split(" ", 2);
-
-            if(token.length() == 0 || split[1] == null || split[1].length() == 0) {
+            User foundUser = fetchUserFromToken(token);
+            if (foundUser == null) {
                 return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Access token missing or invalid");
             }
 
-
-            User checkUser = fetchUserFromToken(split[1]);
-
-            if(checkUser != null && TokenAuthenticator.validUserToken(checkUser.getUsername(), token)) {
-                TradingController controller = new TradingController();
-                Response res = controller.getTradeListings();
-                return res;
-
-            } else {
-                return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Access token missing or invalid");
-
-            }
+            TradingController controller = new TradingController();
+            return controller.getTradeListings();
         }
         else if(request.getMethod() == RestMethod.POST) {
             String token = request.getHeader("Authorization");
-            HashMap<String, String> params = request.getParams();
             JSONArray userStack = null;
             String[] split = request.getHeader("Authorization").split(" ", 2);
             User checkUser = fetchUserFromToken(split[1]);

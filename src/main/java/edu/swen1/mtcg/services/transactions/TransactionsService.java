@@ -8,7 +8,6 @@ import edu.swen1.mtcg.server.Request;
 import edu.swen1.mtcg.server.Response;
 import edu.swen1.mtcg.services.db.models.User;
 import edu.swen1.mtcg.services.db.repository.SessionRepository;
-import edu.swen1.mtcg.utils.TokenAuthenticator;
 
 import java.util.List;
 
@@ -25,17 +24,13 @@ public class TransactionsService implements IService {
         if(request.getMethod() == RestMethod.POST
                 && pathParts.size() == 2 && pathParts.get(1).equals("packages")) {
 
-            String[] split = request.getHeader("Authorization").split(" ", 2);
+            String token = request.getHeaderMap().getAuthHeader();
+            User user = SessionRepository.fetchUserFromToken(token);
 
-            User user = SessionRepository.fetchUserFromToken(split[1]);
-
-            if(user != null && TokenAuthenticator.validUserToken(user.getUsername(),
-                    request.getHeader("Authorization"))) {
-                return controller.purchasePack(user);
-
-
-            } else {
+            if(user == null) {
                 return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Access token missing or invalid");
+            } else {
+                return controller.purchasePack(user);
             }
 
 
