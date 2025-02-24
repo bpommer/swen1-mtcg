@@ -38,7 +38,7 @@ public class RequestSchemaChecker {
         for(String key : JsonKeySet) {
             switch(schemaMap.get(key)) {
                 case STRING:
-                    if(!targetNode.get(key).isTextual()) {
+                    if(!targetNode.get(key).isTextual() || targetNode.get(key).asText().isEmpty()) {
                         return false;
                     }
                     break;

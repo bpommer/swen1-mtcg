@@ -14,7 +14,9 @@ import org.json.JSONObject;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Objects;
 
 
@@ -29,9 +31,7 @@ public class SessionRepository {
     // POST /users
     public Response registerUser(String username, String password) {
 
-            String[] hashPair = HashGenerator.generateHashPair(password);
-            String token = username + "-mtcgToken";
-            String hashedToken = HashGenerator.generateHash(token);
+            HashMap<String, String> hashPair = HashGenerator.generateHashPair(password);
 
             try {
                 // System.out.println(hashPair[0] + " " + hashPair[1] + " " + username);
@@ -40,14 +40,14 @@ public class SessionRepository {
                         VALUES (DEFAULT, ?, ?, ?, DEFAULT, DEFAULT, DEFAULT, ?, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT)
                        """);
 
-                if(hashPair[0] == null || hashPair[1] == null) {
+                if(hashPair.get("password") == null || hashPair.get("salt") == null) {
                     return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Internal server error");
                 }
 
                 stmt.setString(1, username);
-                stmt.setString(2, hashPair[0]);
-                stmt.setString(3, hashPair[1]);
-                stmt.setString(4, hashedToken);
+                stmt.setString(2, hashPair.get("password"));
+                stmt.setString(3, hashPair.get("salt"));
+                stmt.setNull(4, Types.VARCHAR);
 
                 stmt.executeUpdate();
                 return new Response(HttpStatus.CREATED, ContentType.TEXT, "User successfully created");
@@ -56,6 +56,46 @@ public class SessionRepository {
                 return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Internal server error");
             }
     }
+    public Response loginUser(String username, String password) {
+        User foundUser = null;
+        foundUser = fetchUserFromName(username);
+
+        if(foundUser == null) {
+            return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Invalid username/password provided");
+        }
+
+        String hashedPassword = HashGenerator.generateHash(password + foundUser.getSalt());
+
+        if(!hashedPassword.equals(foundUser.getPassword())) {
+            return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Invalid username/password provided");
+        }
+
+        String token = username + "-mtcgToken";
+        String hashedToken = HashGenerator.generateHash(token);
+
+        String tokenQuery = """
+                UPDATE profile
+                SET token = ?
+                WHERE id = ?""";
+
+        try {
+            PreparedStatement stmt = this.transactionUnit.prepareStatement(tokenQuery);
+            stmt.setString(1, hashedToken);
+            stmt.setInt(2, foundUser.getId());
+
+        } catch (SQLException e) {
+            throw new DbAccessException(e);
+        }
+
+        JSONObject resBody = new JSONObject().put("token", token);
+
+        return new Response(HttpStatus.OK, ContentType.JSON, resBody.toString());
+
+    }
+
+
+
+
 
 
     // PUT /users/{username}
@@ -131,9 +171,10 @@ public class SessionRepository {
         String query = "SELECT * FROM profile WHERE username = ?";
 
         TransactionUnit tempUnit = new TransactionUnit();
-        PreparedStatement stmt = tempUnit.prepareStatement(query);
 
         try {
+            PreparedStatement stmt = tempUnit.prepareStatement(query);
+
             stmt.setString(1, username);
             ResultSet rs = stmt.executeQuery();
             if(rs.next()) {
@@ -154,6 +195,7 @@ public class SessionRepository {
                         rs.getInt(14),
                         rs.getString(15)
                 );
+
             } else {
                 return null;
             }

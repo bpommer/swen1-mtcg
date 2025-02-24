@@ -30,6 +30,11 @@ public class TransactionsService implements IService {
             if(user == null) {
                 return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Access token missing or invalid");
             } else {
+                if(user.getCoins() < 5) {
+                    return new Response(HttpStatus.FORBIDDEN, ContentType.TEXT, "You need at least 5 coins per transaction");
+                }
+
+
                 return controller.purchasePack(user);
             }
 

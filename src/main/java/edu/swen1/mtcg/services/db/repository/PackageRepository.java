@@ -40,6 +40,13 @@ public class PackageRepository {
         ArrayList<String> cardIdList = new ArrayList<String>();
         for(int i = 0; i < pack.length(); i++) {
             JSONObject obj = pack.getJSONObject(i);
+            for(int j = 0; j < cardIdList.size(); j++) {
+                String tempString = cardIdList.get(j);
+                if (obj.has(tempString)) {
+                    return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Duplicate card ID in pack");
+                }
+            }
+
             cardIdList.add(obj.getString("Id"));
         }
 
@@ -108,71 +115,17 @@ public class PackageRepository {
     }
 
 
-    // Insert pack into db
-    private void addPack(JSONArray pack) throws Exception {
+    public Response buyPack(User user) {
 
-        try {
-
-            String insertQuery = "INSERT INTO pack (content) VALUES (?::json)";
-            PreparedStatement stmt = this.transactionUnit.prepareStatement(insertQuery);
-            stmt.setString(1, pack.toString());
-            stmt.executeUpdate();
-            stmt.close();
-        }
-        catch (SQLException e) {
-            e.printStackTrace();
-            throw new Exception("Could not insert pack", e);
-        }
-
-    }
-
-    // Register card in db
-    private void insertCard(BattleCard card) {
-
-        String query = "INSERT INTO card VALUES (?, ?, ?, ?, ?, ?)";
-
+        // Check if any pack is available in db
+        String query = "SELECT id FROM pack WHERE amount > 0 ORDER BY RANDOM() LIMIT 1";
         PreparedStatement stmt = this.transactionUnit.prepareStatement(query);
-
-        try {
-            stmt.setString(1, card.getId());
-            stmt.setInt(2, card.getTypeId());
-            stmt.setString(3, card.getName());
-            stmt.setFloat(4, card.getDamage());
-            stmt.setInt(5, card.getElementId());
-
-            if(card.getSpecialId() != 0) {
-                stmt.setInt(6, card.getSpecialId());
-            }
-            else {
-                stmt.setNull(6, java.sql.Types.INTEGER);
-            }
-
-            stmt.executeUpdate();
-
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-
-
-    public Response buyPack(User user, int remainingCoins) {
-
-        // Fetch pack from db
-        String query = "SELECT * FROM pack WHERE sold = FALSE ORDER BY RANDOM() LIMIT 1";
-        PreparedStatement stmt = this.transactionUnit.prepareStatement(query);
-        int packId = -1;
-
         ResultSet result = null;
         JSONArray targetPack = null;
 
         try {
             result = stmt.executeQuery();
-            if(result.next()) {
-                packId = result.getInt(1);
-                targetPack = new JSONArray(result.getString(2));
-
-            } else {
+            if(!result.next()) {
                 return new Response(HttpStatus.NOT_FOUND, ContentType.TEXT, "No card package available for buying");
             }
 
@@ -181,49 +134,37 @@ public class PackageRepository {
             throw new RuntimeException(e);
         }
 
-        // Add cards from pack to user stack
-        JSONArray userStack = user.getStack();
-        for(int i = 0; i < targetPack.length(); i++) {
-            JSONObject tempJson = targetPack.getJSONObject(i);
-            userStack.put(tempJson);
-        }
+        String addQuery = """
+                WITH pk AS (
+                    SELECT id, content FROM pack
+                    WHERE amount > 0
+                    ORDER BY RANDOM()
+                    LIMIT 1
+                ), pu AS (
+                    UPDATE pack
+                    SET amount = amount - 1
+                    WHERE id = pk.id
+                    FROM pk
+                )
+                UPDATE profile
+                SET stack = stack || pk.content::jsonb,
+                coins = coins - 5
+                WHERE id = ?
+                FROM pk""";
 
-        // Set chosen pack to sold
-        String soldQuery = "UPDATE pack SET sold = TRUE WHERE id = ?";
-        stmt = this.transactionUnit.prepareStatement(soldQuery);
         try {
-            stmt.setInt(1, packId);
+            stmt = transactionUnit.prepareStatement(addQuery);
+            stmt.setInt(1, user.getId());
             stmt.executeUpdate();
+
         } catch (SQLException e) {
             throw new DbAccessException(e);
         }
 
-        // Update user stack
-        String updateUserQuery = "UPDATE profile SET coins = ?, stack = ?::json WHERE id = ?";
-        stmt = this.transactionUnit.prepareStatement(updateUserQuery);
-        try {
-            stmt.setInt(1, remainingCoins);
-            stmt.setString(2, userStack.toString());
-            stmt.setInt(3, user.getId());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new DbAccessException(e);
-        }
+
+
+
         return new Response(HttpStatus.OK, ContentType.JSON, targetPack.toString());
-    }
-
-
-    public static boolean keyWhitelistCheck(JsonNode target, HashSet<String> whitelist) {
-
-        HashSet<String> content = new HashSet<>();
-        Iterator<String> keys = target.fieldNames();
-        while(keys.hasNext()) {
-            String key = keys.next();
-            if(!whitelist.contains(key)) {
-                return false;
-            }
-        }
-        return true;
     }
 
 

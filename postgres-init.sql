@@ -134,7 +134,6 @@ CREATE TABLE profile
     playcount int DEFAULT 0 NOT NULL CHECK (playcount >= 0),
     elo int DEFAULT 100 NOT NULL CHECK (elo >= 0),
     token TEXT NOT NULL,
-    -- Implementation WIP
     stack JSONB DEFAULT '[]'::jsonb NOT NULL,
     deck JSONB DEFAULT '[]'::jsonb NOT NULL,
     name TEXT default NULL,

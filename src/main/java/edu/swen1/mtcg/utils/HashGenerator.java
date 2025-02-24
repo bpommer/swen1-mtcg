@@ -4,19 +4,24 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.HashMap;
 
 public class HashGenerator {
 
     // Generate salt/hash pair for new user
-    public static String[] generateHashPair(String password) {
+    public static HashMap<String, String> generateHashPair(String password) {
         try {
-            String[] hashPair = new String[2];
+
+            HashMap<String, String> hashPair = new HashMap<>();
+
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            hashPair[1] = generateSalt();
-            String saltedPassword = password + hashPair[1];
+            String salt = generateSalt();
+            String saltedPassword = password + salt;
 
             byte[] hash = digest.digest(saltedPassword.getBytes());
-            hashPair[0] = Base64.getEncoder().encodeToString(hash);
+
+            hashPair.put("password", Base64.getEncoder().encodeToString(hash));
+            hashPair.put("salt", salt);
             return hashPair;
         }
         catch (NoSuchAlgorithmException e) {
