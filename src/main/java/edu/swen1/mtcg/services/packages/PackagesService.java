@@ -19,12 +19,11 @@ import org.json.JSONObject;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class PackagesService implements IService {
-    @SuppressWarnings("FieldCanBeLocal")
-    private final int ID_STRING_SIZE = 36;
-    private final int NAME_STRING_MAX = 200;
-    private final Set<String> CARD_KEY_WHITELIST = new HashSet<>(Arrays.asList("Id", "Name", "Damage"));
+
+    private final String ID_PATTERN_STRING = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$";
     private final PackageController controller;
 
     public PackagesService() { this.controller = new PackageController(); }
@@ -39,20 +38,43 @@ public class PackagesService implements IService {
 
             if(foundUser != null && foundUser.getUsername().equals("admin")) {
 
+                // Load body into JSONArray
                 JSONArray packArray = null;
-
                 try {
                     packArray = new JSONArray(request.getBody());
                 } catch (JSONException e) {
                     return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Error: Bad request");
                 }
 
+                // Check if array contains exactly 5 elements
+                if(packArray.length() != 5) { return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Error: Bad request"); }
+
+
+                // Card format validation logic
                 for(int i = 0; i < packArray.length(); i++) {
-                    JSONObject cd = packArray.getJSONObject(i);
+                    JSONObject cd = null;
+
+                    // Check if array element is JSON
+                    try {
+                        cd = packArray.getJSONObject(i);
+                    } catch (JSONException e) {
+                        return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Error: Bad request");
+                    }
+
+                    // Check JSON format
                     if(!RequestSchemaChecker.JsonKeyValueCheck(cd.toString(), SchemaWhitelists.CARD)) {
                         return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Error: Bad request");
                     }
+
+                    // Check if ID matches regex pattern and if damage is not negative
+                    if(!cd.getString("Id").matches(ID_PATTERN_STRING)
+                    || cd.getFloat("Damage") < 0) {
+                        return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Error: Bad request");
+                    }
+
                 }
+
+
                 return controller.addPackage(packArray);
             }
             else if(foundUser != null) {

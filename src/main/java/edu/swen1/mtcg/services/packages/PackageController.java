@@ -17,7 +17,13 @@ public class PackageController extends Controller {
         try(transactionUnit) {
 
             Response res = new PackageRepository(transactionUnit).registerPackage(pack);
-            transactionUnit.dbCommit();
+            if(res.getStatusCode() < 200 || res.getStatusCode() > 299) {
+                transactionUnit.dbRollback();
+            } else {
+                transactionUnit.dbCommit();
+            }
+
+
             return res;
         } catch (Exception e) {
             e.printStackTrace();

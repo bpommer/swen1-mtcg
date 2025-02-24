@@ -11,24 +11,28 @@
 
 
  */
+
+CREATE EXTENSION IF NOT EXISTS CITEXT;
 GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO webserver;
 GRANT ALL ON SCHEMA public TO dbadmin;
 
 CREATE TABLE cardtype (
     id serial PRIMARY KEY,
-    type VARCHAR(50) NOT NULL
+    type CITEXT UNIQUE NOT NULL
 );
 
 GRANT SELECT ON cardtype TO webserver;
 GRANT ALL ON cardtype TO dbadmin;
 
-INSERT INTO cardtype VALUES(DEFAULT, 'monster');
-INSERT INTO cardtype VALUES(DEFAULT, 'spell');
+INSERT INTO cardtype VALUES(DEFAULT, 'Monster');
+INSERT INTO cardtype VALUES(DEFAULT, 'Spell');
+
 
 CREATE TABLE specialtype (
     id serial PRIMARY KEY,
-    type VARCHAR(50) NOT NULL
+    type TEXT UNIQUE NOT NULL
 );
+
 
 GRANT SELECT ON specialtype TO webserver;
 GRANT ALL ON specialtype TO dbadmin;
@@ -46,7 +50,7 @@ INSERT INTO specialtype VALUES(DEFAULT, 'FireElf');
 CREATE TABLE element
 (
     id serial PRIMARY KEY,
-    type VARCHAR(200) UNIQUE NOT NULL
+    type TEXT UNIQUE NOT NULL
 );
 
 GRANT SELECT ON element to webserver;
@@ -123,7 +127,7 @@ JOIN specialtype s on c.special = s.id;*/
 CREATE TABLE profile
 (
     id serial PRIMARY KEY,
-    username VARCHAR(100) UNIQUE NOT NULL,
+    username TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
     salt TEXT NOT NULL,
     coins int DEFAULT 20 NOT NULL CHECK (coins >= 0),
@@ -139,7 +143,6 @@ CREATE TABLE profile
     wins int DEFAULT 0 NOT NULL,
     lastlogin timestamp DEFAULT NOW() NOT NULL
 );
-
 
 GRANT SELECT, INSERT, UPDATE ON profile TO webserver;
 GRANT ALL ON profile TO dbadmin;

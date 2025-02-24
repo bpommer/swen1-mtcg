@@ -13,7 +13,7 @@ public class LoginController extends Controller {
         TransactionUnit transactionUnit = new TransactionUnit();
 
         try(transactionUnit) {
-            Response res = new SessionRepository(transactionUnit).fetchUser(username, password);
+            Response res = new SessionRepository(transactionUnit).registerUser(username, password);
             transactionUnit.dbCommit();
             return res;
         } catch (Exception e) {

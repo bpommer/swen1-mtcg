@@ -95,26 +95,7 @@ public class CardDataRepository {
 
     }
 
-    public static JSONObject createCard(String id) {
-        TransactionUnit transactionUnit = new TransactionUnit();
 
-        String query = "SELECT id, type, damage FROM card WHERE id = ?";
-
-        try(PreparedStatement stmt = transactionUnit.prepareStatement(query)) {
-            stmt.setString(1, id);
-            ResultSet rs = stmt.executeQuery();
-            if(rs.next()) {
-                Card card = new Card(rs.getString(1), rs.getString(2), rs.getFloat(3));
-                return card.toJSON();
-            } else {
-                return new JSONObject();
-            }
-
-        } catch (Exception e) {
-            return new JSONObject();
-        }
-
-    }
 
 
     // Generate Hashset for integrity checks

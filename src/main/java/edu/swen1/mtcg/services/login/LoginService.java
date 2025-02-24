@@ -26,7 +26,6 @@ public class LoginService implements IService {
         String password;
         if(request.getMethod() == RestMethod.POST) {
 
-            SessionRepository process = new SessionRepository(new TransactionUnit());
             ObjectMapper mapper = new ObjectMapper();
             try {
                 JsonNode node = mapper.readTree(request.getBody());
@@ -40,7 +39,7 @@ public class LoginService implements IService {
             }
 
             try {
-                return process.fetchUser(username, password);
+                return controller.login(username, password);
             } catch (Exception e) {
                 return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Error processing request");
             }

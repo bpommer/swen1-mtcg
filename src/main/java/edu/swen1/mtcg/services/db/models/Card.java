@@ -2,9 +2,12 @@ package edu.swen1.mtcg.services.db.models;
 
 import edu.swen1.mtcg.http.RestMethod;
 import edu.swen1.mtcg.utils.HashGenerator;
+import lombok.Getter;
+import lombok.Setter;
 import org.json.JSONObject;
 
-
+@Getter
+@Setter
 public class Card {
 
     private String id;
@@ -32,25 +35,5 @@ public class Card {
         cardJson.put("Damage", damage);
         return cardJson;
     }
-
-
-
-    public String getId() {
-        return id;
-    }
-    public String getName() {
-        return name;
-    }
-    public float getDamage() {
-        return damage;
-    }
-
-
-
-
-
-    // public Card(int id, String name, String type, int damage, int element, int special)
-
-
 
 }

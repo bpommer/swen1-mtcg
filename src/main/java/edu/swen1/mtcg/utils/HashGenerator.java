@@ -12,11 +12,11 @@ public class HashGenerator {
         try {
             String[] hashPair = new String[2];
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            hashPair[0] = generateSalt();
-            String saltedPassword = password + hashPair[0];
+            hashPair[1] = generateSalt();
+            String saltedPassword = password + hashPair[1];
 
             byte[] hash = digest.digest(saltedPassword.getBytes());
-            hashPair[1] = Base64.getEncoder().encodeToString(hash);
+            hashPair[0] = Base64.getEncoder().encodeToString(hash);
             return hashPair;
         }
         catch (NoSuchAlgorithmException e) {

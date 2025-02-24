@@ -19,17 +19,23 @@ public class User {
     private int coins;
     private int playCount;
     private int elo;
-    private String bio;
-    private String image;
-    private int wins;
     private String token;
     private String stack;
     private String deck;
+    private String name;
+    private String bio;
+    private String image;
+    private int wins;
+    private String lastLogin;
 
 
-    // Overload constructor to allow registration/login and full user data
-    public User(Integer id, String username, String password, String salt, Integer coins,
-                Integer playCount, Integer elo, String token, String stack, String deck, String bio, String image, int wins) {
+
+
+    public User(Integer id, String username, String password, String salt,
+                Integer coins, Integer playCount, Integer elo, String token,
+                String stack, String deck, String name, String bio,
+                String image, int wins, String lastLogin) {
+
         this.id = id;
         this.username = username;
         this.password = password;
@@ -40,22 +46,11 @@ public class User {
         this.token = token;
         this.stack = stack;
         this.deck = deck;
+        this.name = name;
         this.bio = bio;
         this.image = image;
         this.wins = wins;
-
-    }
-
-    public User(Integer id, String username, String password, String salt, Integer coins,
-                Integer playCount, Integer elo) {
-
-        this.id = id;
-        this.username = username;
-        this.password = password;
-        this.salt = salt;
-        this.coins = coins;
-        this.playCount = playCount;
-        this.elo = elo;
+        this.lastLogin = lastLogin;
 
     }
 

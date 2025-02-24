@@ -29,8 +29,7 @@ public class SessionRepository {
     // POST /users
     public Response registerUser(String username, String password) {
 
-            String[] hashPair;
-            hashPair = HashGenerator.generateHashPair(password);
+            String[] hashPair = HashGenerator.generateHashPair(password);
             String token = username + "-mtcgToken";
             String hashedToken = HashGenerator.generateHash(token);
 
@@ -41,9 +40,13 @@ public class SessionRepository {
                         VALUES (DEFAULT, ?, ?, ?, DEFAULT, DEFAULT, DEFAULT, ?, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT)
                        """);
 
+                if(hashPair[0] == null || hashPair[1] == null) {
+                    return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Internal server error");
+                }
+
                 stmt.setString(1, username);
-                stmt.setString(2, hashPair[1]);
-                stmt.setString(3, hashPair[0]);
+                stmt.setString(2, hashPair[0]);
+                stmt.setString(3, hashPair[1]);
                 stmt.setString(4, hashedToken);
 
                 stmt.executeUpdate();
@@ -97,7 +100,7 @@ public class SessionRepository {
             stmt.setString(1, tokenHash);
             ResultSet rs = stmt.executeQuery();
             if(rs.next()) {
-                User foundUser = new User(
+                return new User(
                         rs.getInt(1),
                         rs.getString(2),
                         rs.getString(3),
@@ -110,8 +113,10 @@ public class SessionRepository {
                         rs.getString(10),
                         rs.getString(11),
                         rs.getString(12),
-                        rs.getInt(13));
-                return foundUser;
+                        rs.getString(13),
+                        rs.getInt(14),
+                        rs.getString(15)
+                );
             }
             return null;
         } catch(SQLException e) {
@@ -145,7 +150,9 @@ public class SessionRepository {
                         rs.getString(10),
                         rs.getString(11),
                         rs.getString(12),
-                        rs.getInt(13)
+                        rs.getString(13),
+                        rs.getInt(14),
+                        rs.getString(15)
                 );
             } else {
                 return null;
@@ -180,7 +187,10 @@ public class SessionRepository {
                     rs.getString(10),
                     rs.getString(11),
                     rs.getString(12),
-                    rs.getInt(13));
+                    rs.getString(13),
+                    rs.getInt(14),
+                    rs.getString(15)
+            );
             }
             return null;
 
@@ -220,7 +230,10 @@ public class SessionRepository {
                         rs.getString(10),
                         rs.getString(11),
                         rs.getString(12),
-                        rs.getInt(13));
+                        rs.getString(13),
+                        rs.getInt(14),
+                        rs.getString(15)
+                );
 
                 jsonArray.put(user.getUserStats());
 
@@ -232,40 +245,5 @@ public class SessionRepository {
 
 
     }
-
-
-    /*public static boolean validSession(String token) {
-        String query = "SELECT lastlogin FROM profile WHERE token = ?";
-        TransactionUnit tempUnit = new TransactionUnit();
-        PreparedStatement stmt = tempUnit.prepareStatement(query);
-        stmt.setString(1, token);
-        ResultSet rs = null;
-        try {
-            rs = stmt.executeQuery();
-
-            if(rs.next()) {
-                Instant lastLogin = Instant.parse(rs.getTimestamp(1));
-                return ((Instant.now().getEpochSecond() - lastLogin.getEpochSecond()) < 600);
-
-            } else {
-                return false;
-            }
-
-
-
-
-        } catch(SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-
-
-
-
-
-    }*/
-
-
-
 
 }

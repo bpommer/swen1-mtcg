@@ -12,16 +12,15 @@ import edu.swen1.mtcg.server.Response;
 import edu.swen1.mtcg.services.db.dbaccess.DbAccessException;
 import edu.swen1.mtcg.services.db.dbaccess.TransactionUnit;
 import edu.swen1.mtcg.services.db.models.User;
+import edu.swen1.mtcg.utils.BattleCardFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.sql.Types;
+import java.util.*;
 
 import static edu.swen1.mtcg.services.db.repository.CardDataRepository.getCardHashSet;
 import static edu.swen1.mtcg.utils.HashGenerator.generateHash;
@@ -34,64 +33,77 @@ public class PackageRepository {
 
     public Response registerPackage(JSONArray pack) {
 
-        // Validate pack format and check for existing entry
-        if(true) {
-            System.out.println("Package validation failed");
-            return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "");
+        if(pack.length() != 5) {
+            return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Pack does not contain exactly 5 cards");
         }
 
-        // Get all card hashes in db and search in hashmap
-        String[] deckHashes = new String[pack.length()];
-        try {
-            HashSet<String> cardHashes = getCardHashSet();
-
-            // Handling if Hashmap is empty
-            if(!cardHashes.isEmpty()) {
-                for(int i = 0; i < pack.length(); i++) {
-
-                    JSONObject tempJson = pack.getJSONObject(i);
-
-                    if(cardHashes.contains(tempJson.getString("Id"))) {
-                        return new Response(HttpStatus.CONFLICT,
-                                ContentType.TEXT, "At least one card in the packages already exists");
-                    }
-                }
-            }
-
-        } catch (Exception e) {
-            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Internal server error");
-        }
-
-        // Infer type, element and special with BattleCard model
-
-        ArrayList<BattleCard> packList = new ArrayList<>();
+        ArrayList<String> cardIdList = new ArrayList<String>();
         for(int i = 0; i < pack.length(); i++) {
-            JSONObject tempJson = pack.getJSONObject(i);
-            packList.add(new BattleCard(tempJson.getString("Id"),
-                    tempJson.getString("Name"), tempJson.getFloat("Damage")));
+            JSONObject obj = pack.getJSONObject(i);
+            cardIdList.add(obj.getString("Id"));
         }
 
-        // Register cards in db
-        for(int i = 0; i < packList.size(); i++) {
-            try {
-                insertCard(packList.get(i));
-            } catch (Exception e) {
-                e.printStackTrace();
-                throw new DbAccessException(e.getMessage());
-
-            }
-
-        }
-
-        // Extract and save IDs as JSON array
-
-
+        // Check if card ID exists in db
         try {
-            addPack(pack);
-        } catch (Exception e) {
-            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Internal server error");
+            String checkQuery = "SELECT id FROM card WHERE id IN (?, ?, ?, ?, ?)";
+            PreparedStatement stmt = this.transactionUnit.prepareStatement(checkQuery);
+
+            stmt.setString(1, cardIdList.get(0));
+            stmt.setString(2, cardIdList.get(1));
+            stmt.setString(3, cardIdList.get(2));
+            stmt.setString(4, cardIdList.get(3));
+            stmt.setString(5, cardIdList.get(4));
+            ResultSet rs = stmt.executeQuery();
+
+            if(rs.next()) {
+                return new Response(HttpStatus.CONFLICT, ContentType.TEXT,
+                        "At least one card in the packages already exists");
+            }
+        } catch(SQLException e) {
+            throw new DbAccessException("Card ID query failed", e);
+        }
+
+        // Infer type, element and special from cards and register in db
+
+
+        String registerQuery = """
+                    INSERT INTO card VALUES (?,
+                    ?, ?, ?, ?, ?, ?::jsonb)""";
+
+        BattleCardFactory battleCardFactory = new BattleCardFactory();
+
+
+        for(int i = 0; i < pack.length(); i++) {
+            BattleCard newCard = battleCardFactory.buildBattleCard(pack.getJSONObject(i));
+
+            try {
+                PreparedStatement stmt = this.transactionUnit.prepareStatement(registerQuery);
+                stmt.setString(1, newCard.getId());
+                stmt.setInt(2, newCard.getTypeId());
+                stmt.setString(3, newCard.getName());
+                stmt.setFloat(4, newCard.getDamage());
+                stmt.setInt(5, newCard.getElementId());
+                if(newCard.getSpecialId() != null) {
+                    stmt.setInt(6, newCard.getSpecialId());
+                } else {
+                    stmt.setNull(6, Types.INTEGER);
+                }
+                stmt.setString(7, newCard.toJSON().toString());
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                throw new DbAccessException(e);
+            }
+        }
+
+        String insertPackQuery = "INSERT INTO pack VALUES (DEFAULT, ?::json, DEFAULT)";
+        try {
+            PreparedStatement stmt = this.transactionUnit.prepareStatement(insertPackQuery);
+            stmt.setString(1, pack.toString());
+        } catch (SQLException e) {
+            throw new DbAccessException(e);
         }
         return new Response(HttpStatus.CREATED, ContentType.TEXT, "Package and cards successfully created");
+
 
     }
 
