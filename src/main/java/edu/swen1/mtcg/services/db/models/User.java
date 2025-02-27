@@ -83,23 +83,6 @@ public class User {
 
 
 
-    // Constructor for login/registration
-    public User(String username, String password, RestMethod method) {
-        this.username = username;
-
-        // If POST, hash and salt password
-        if(method == RestMethod.POST) {
-            String[] pwgen = HashGenerator.generateHashPair(username);
-            this.password = pwgen[0] + pwgen[1];
-            this.salt = pwgen[1];
-        }
-        else {
-            this.password = password;
-            this.salt = null;
-        }
-
-    }
-
     // Constructor for schema UserData
     public User(String username, String bio, String image) {
         this.username = username;

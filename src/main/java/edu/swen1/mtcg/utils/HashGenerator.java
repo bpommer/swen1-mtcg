@@ -5,7 +5,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.HashSet;
 
 public class HashGenerator {
 
@@ -19,15 +18,18 @@ public class HashGenerator {
         String saltedPassword = password + salt;
         String hashedPassword = HashGenerator.generateHash(saltedPassword);
 
-        if(salt == null || hashedPassword == null) {
+        if (salt == null || hashedPassword == null) {
             return null;
         }
 
-        HashMap<String, String> hashPairMap = new HashMap<>();
-        hashPairMap.put("password", hashedPassword);
-        hashPairMap.put("salt", salt);
-        return hashPairMap;
+        HashMap<String, String> hashPair = new HashMap<>();
+
+        hashPair.put("password", hashedPassword);
+        hashPair.put("salt", salt);
+        return hashPair;
     }
+
+
 
     // Digest string to hash
     public static String generateHash(String password) {

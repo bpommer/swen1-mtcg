@@ -15,7 +15,7 @@ public class TransactionsController extends Controller {
             if(user.getCoins() < 5) {
                 return new Response(HttpStatus.FORBIDDEN, ContentType.TEXT, "Not enough money for buying a card package");
             }
-            Response res = new PackageRepository(transactionUnit).buyPack(user, user.getCoins() - 5);
+            Response res = new PackageRepository(transactionUnit).buyPack(user);
             transactionUnit.dbCommit();
             return res;
         } catch (Exception e) {

@@ -31,27 +31,26 @@ public class CardsService implements IService {
 
 
             if(path.size() == 1 && authToken != null) {
-                try {
-                    User userdata = SessionRepository.fetchUserFromToken(authToken);
-                    if(userdata != null) {
-                        String stack = userdata.getStack().toString();
-                        JSONArray stackArray = new JSONArray(stack);
-                        if(stackArray.isEmpty()) {
-                            return new Response(HttpStatus.NO_CONTENT, ContentType.TEXT, "No cards in stack");
-                        }
-                        return new Response(HttpStatus.OK, ContentType.JSON, stackArray.toString());
-                    } else {
-                        return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Access token is missing or invalid");
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return new Response(HttpStatus.INTERNAL_SERVER_ERROR,
-                            ContentType.TEXT, "Internal server error");
+
+                User userdata = SessionRepository.fetchUserFromToken(authToken);
+
+                if(userdata == null) {
+                    return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Access token is missing or invalid");
                 }
+
+                String stack = userdata.getStack().toString();
+                JSONArray stackArray = new JSONArray(stack);
+
+                if(stackArray.isEmpty()) {
+                    return new Response(HttpStatus.NO_CONTENT, ContentType.TEXT, "No cards in stack");
+                }
+                return new Response(HttpStatus.OK, ContentType.JSON, stackArray.toString());
+
             }
             else if(path.size() == 1) {
                 return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Access token is missing or invalid");
             }
+
             else if(path.size() == 2) {
                 System.out.println("Endpoint: " + path.get(0) + " " + path.get(1));
                 Card card = CardDataRepository.getCardData(path.get(1));
