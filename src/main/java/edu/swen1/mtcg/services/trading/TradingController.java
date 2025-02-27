@@ -15,11 +15,11 @@ public class TradingController extends Controller {
 
 
 
-    public Response getTradeListings() {
+    public Response getTrades() {
         TransactionUnit transactionUnit = new TransactionUnit();
 
         try(transactionUnit) {
-            Response res = new CardDataRepository(transactionUnit).getTradeData();
+            Response res = new TradeRepository(transactionUnit).getTradeListings();
             return res;
 
         } catch (Exception e) {
@@ -54,15 +54,49 @@ public class TradingController extends Controller {
 
     }
 
-
-
-    public Response revokeTradeOffer(User user, Request request) {
+    public Response makeTrade(User user, String cardId, String tradeId) {
         TransactionUnit transactionUnit = new TransactionUnit();
 
+        try(transactionUnit) {
+            Response res = new TradeRepository(transactionUnit).executeTrade(user, cardId, tradeId);
+            if(res.getStatusCode() < 200 || res.getStatusCode() > 299) {
+                transactionUnit.dbRollback();
+            } else {
+                transactionUnit.dbCommit();
+            }
+            return res;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Response(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    ContentType.JSON,
+                    "{ \"error\": \"Internal Server Error\" }"
+            );
+        }
+    }
 
 
 
-        return null;
+
+    public Response revokeTradeOffer(User user, String tradeId) {
+        TransactionUnit transactionUnit = new TransactionUnit();
+
+        try(transactionUnit) {
+            Response res = new TradeRepository(transactionUnit).deleteTrade(user, tradeId);
+            if(res.getStatusCode() < 200 || res.getStatusCode() > 299) {
+                transactionUnit.dbRollback();
+            } else {
+                transactionUnit.dbCommit();
+            }
+            return res;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Response(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    ContentType.JSON,
+                    "{ \"error\": \"Internal Server Error\" }"
+            );
+        }
     }
 
 

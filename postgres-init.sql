@@ -81,7 +81,7 @@ CREATE TABLE card
 );
 
 
--- SELECT * FROM card;
+-- SELECT * FROM pack;
 
 GRANT SELECT, INSERT ON card TO webserver;
 GRANT ALL ON card TO dbadmin;

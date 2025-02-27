@@ -40,8 +40,8 @@ public class SessionRepository {
             try {
                 // System.out.println(hashPair[0] + " " + hashPair[1] + " " + username);
                 PreparedStatement stmt = this.transactionUnit.prepareStatement("""
-                        INSERT INTO profile(id, username, password, salt, coins, playcount, elo, token, stack, deck, bio, image, wins, lastlogin)
-                        VALUES (DEFAULT, ?, ?, ?, DEFAULT, DEFAULT, DEFAULT, ?, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT)
+                        INSERT INTO profile(id, username, password, salt, coins, playcount, elo, token, stack, deck, bio, image, wins, lastlogin, name)
+                        VALUES (DEFAULT, ?, ?, ?, DEFAULT, DEFAULT, DEFAULT, ?, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT)
                        """);
 
 
@@ -58,25 +58,13 @@ public class SessionRepository {
                 stmt.executeUpdate();
                 return new Response(HttpStatus.CREATED, ContentType.TEXT, "User successfully created");
             } catch(SQLException e) {
-                e.printStackTrace();
-                return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Internal server error");
+                throw new DbAccessException("User could not be created");
             }
     }
-    public Response loginUser(String username, String password) {
-        User foundUser = null;
-        foundUser = fetchUserFromName(username);
+    public Response loginUser(User user) {
 
-        if(foundUser == null) {
-            return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Invalid username/password provided");
-        }
 
-        String hashedPassword = HashGenerator.generateHash(password + foundUser.getSalt());
-
-        if(!hashedPassword.equals(foundUser.getPassword())) {
-            return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Invalid username/password provided");
-        }
-
-        String token = username + "-mtcgToken";
+        String token = user.getUsername() + "-mtcgToken";
         String hashedToken = HashGenerator.generateHash(token);
 
         String tokenQuery = """
@@ -87,15 +75,15 @@ public class SessionRepository {
         try {
             PreparedStatement stmt = this.transactionUnit.prepareStatement(tokenQuery);
             stmt.setString(1, hashedToken);
-            stmt.setInt(2, foundUser.getId());
+            stmt.setInt(2, user.getId());
 
         } catch (SQLException e) {
             throw new DbAccessException(e);
         }
 
-        JSONObject resBody = new JSONObject().put("token", token);
+        String resBody = "{ " + token + " }";
 
-        return new Response(HttpStatus.OK, ContentType.JSON, resBody.toString());
+        return new Response(HttpStatus.OK, ContentType.JSON, resBody);
 
     }
 

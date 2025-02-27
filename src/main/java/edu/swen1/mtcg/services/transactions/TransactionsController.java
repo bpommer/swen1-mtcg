@@ -16,7 +16,12 @@ public class TransactionsController extends Controller {
                 return new Response(HttpStatus.FORBIDDEN, ContentType.TEXT, "Not enough money for buying a card package");
             }
             Response res = new PackageRepository(transactionUnit).buyPack(user);
-            transactionUnit.dbCommit();
+            if(res.getStatusCode() < 200 || res.getStatusCode() > 299) {
+                transactionUnit.dbRollback();
+            } else {
+                transactionUnit.dbCommit();
+            }
+
             return res;
         } catch (Exception e) {
             e.printStackTrace();

@@ -12,6 +12,7 @@ import edu.swen1.mtcg.server.Response;
 import edu.swen1.mtcg.services.db.models.User;
 import edu.swen1.mtcg.services.db.repository.SessionRepository;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ import static edu.swen1.mtcg.services.db.repository.SessionRepository.fetchUserF
 public class DeckService implements IService {
 
     private final DeckController controller;
+    private final int DECK_SIZE = 4;
 
     public DeckService() { this.controller = new DeckController(); }
 
@@ -34,16 +36,29 @@ public class DeckService implements IService {
             String token = request.getHeaderMap().getAuthHeader();
             HashMap<String, String> params = request.getParams();
 
-            User user = SessionRepository.fetchUserFromToken(token);
-            if(user == null) {
+            User foundUser = SessionRepository.fetchUserFromToken(token);
+            if(foundUser == null) {
                 return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Unauthorized");
             } else {
-                try {
-                    Response res = controller.fetchDeck(user.getId(), params);
-                    return res;
-                } catch (Exception e) {
-                    return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Internal Server Error");
+                JSONArray jsonDeck = new JSONArray(foundUser.getDeck());
 
+                if(jsonDeck.isEmpty()) {
+                    return new Response(HttpStatus.NO_CONTENT, ContentType.TEXT, HttpStatus.NO_CONTENT.statusMessage);
+                } else {
+                    // Build string if plain format is specified in params, otherwise return JSON array
+                    if(params.containsKey("format") && params.get("format").equals("plain")) {
+                        StringBuilder deckString = new StringBuilder().append("\n");
+                        for(int i = 0; i < jsonDeck.length(); i++) {
+                            JSONObject tempCard = jsonDeck.getJSONObject(i);
+                            deckString.append("Id: ").append(tempCard.get("Id")).append("\n");
+                            deckString.append("Name: ").append(tempCard.get("Name")).append("\n");
+                            deckString.append("Damage: ").append(tempCard.get("Damage")).append("\n");
+                            deckString.append("\n");
+                        }
+                        return new Response(HttpStatus.OK, ContentType.JSON, deckString.toString());
+                    } else {
+                        return new Response(HttpStatus.OK, ContentType.JSON, jsonDeck.toString());
+                    }
                 }
             }
 
@@ -63,94 +78,32 @@ public class DeckService implements IService {
                         "Access token is missing or invalid");
             }
 
-            // Check type of array content
-            JSONArray requestArray = new JSONArray(requestBody);
-
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode rootNode = null;
+            // Check if body is a valid JSON array
+            JSONArray requestArray = null;
             try {
-                rootNode = mapper.readTree(requestArray.toString());
-            } catch (JsonProcessingException e) {
-                return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Bad Request");
+                requestArray = new JSONArray(requestBody);
+            } catch (JSONException e) {
+                return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, HttpStatus.BAD_REQUEST.statusMessage);
             }
-            if(rootNode != null && rootNode.isArray()) {
-                for(JsonNode node : rootNode) {
-                    if(!node.isTextual()) {
-                        return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Bad Request");
-                    }
-                }
+            // Check if array contains exactly 4 cards
+            if(requestArray.length() != DECK_SIZE) {
+                return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, HttpStatus.BAD_REQUEST.statusMessage);
             }
 
-            // Check if exactly 4 cards are submitted
-            if(requestArray.length() != 4) {
-                return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT,
-                        "The provided deck did not include the required amount of cards");
+            // Check if array only consists of strings
+            for(int i = 0; i < requestArray.length(); i++) {
+                if(!(requestArray.get(i) instanceof String)) {
+                    return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, HttpStatus.BAD_REQUEST.statusMessage);
+                }
             }
 
-            // Fill hashset with card IDs
-            HashSet<String> requestSet = new HashSet<String>();
-            for(Object o : requestArray) {
-                JSONObject obj = (JSONObject) o;
-                requestSet.add(((JSONObject) o).getString("Id"));
-            }
-
-            // Load cards from user and build new deck
-            try {
-                JSONArray userStack = new JSONArray(user.getStack());
-                JSONArray userDeck = new JSONArray(user.getDeck());
-                ArrayList<JSONObject> inDeck = new ArrayList<>();
-                ArrayList<JSONObject> fromStack = new ArrayList<>();
+            return controller.changeDeck(requestArray, user);
 
 
 
 
-                // Search cards that are already in the deck
-                for(Object deckCard : userDeck) {
-                    JSONObject deckCardJson = (JSONObject) deckCard;
-                    String deckCardId = deckCardJson.getString("Id");
-                    if(requestSet.contains(deckCardId)) {
-                        inDeck.add(new JSONObject(deckCardJson));
-                    }
-                }
-                // Search and remove cards that are in the stack
-                if(inDeck.size() != 4) {
-                    for(int i = 0; i < userStack.length(); i++) {
-
-                        JSONObject stackCardJson = new JSONObject(userStack.get(i).toString());
-                        String stackCardId = stackCardJson.getString("Id");
-                        if (requestSet.contains(stackCardId)) {
-                            fromStack.add(new JSONObject(stackCardJson));
-                            userStack.remove(i);
-                        }
-
-                        userStack.put(stackCardJson);
-                    }
-                } else {
-                    return new Response(HttpStatus.OK, ContentType.JSON, "The deck has been successfully configured");
-                }
-
-                // Check if all specified cards are owned by the user
-                if(inDeck.size() + fromStack.size() != 4) {
-                    return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT,
-                            "At least one of the provided cards does not belong to the user or is not available.");
-                }
-
-                JSONArray newDeck = new JSONArray();
-
-                // Assemble new deck and update deck and stack
-                for(JSONObject deckCardJson : inDeck) {
-                    newDeck.put(deckCardJson);
-                }
-                for(JSONObject stackCardJson : fromStack) {
-                    newDeck.put(stackCardJson);
-                }
-
-                return controller.changeDeck(newDeck, userStack, user.getId());
 
 
-            } catch (Exception e) {
-                return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Internal server error");
-            }
 
         }
         else {

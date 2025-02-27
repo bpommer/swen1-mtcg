@@ -1,8 +1,5 @@
 package edu.swen1.mtcg.services.db.repository;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.swen1.mtcg.services.db.models.BattleCard;
 
 import edu.swen1.mtcg.http.ContentType;
@@ -22,21 +19,19 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
 
-import static edu.swen1.mtcg.services.db.repository.CardDataRepository.getCardHashSet;
-import static edu.swen1.mtcg.utils.HashGenerator.generateHash;
-
 public class PackageRepository {
-    public final int CARD_COUNT = 5;
+    public final int PACK_SIZE = 5;
     private TransactionUnit transactionUnit;
     public PackageRepository(TransactionUnit transactionUnit) { this.transactionUnit = transactionUnit;}
 
 
     public Response registerPackage(JSONArray pack) {
 
-        if(pack.length() != CARD_COUNT) {
+        if(pack.length() != PACK_SIZE) {
             return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Pack does not contain exactly 5 cards");
         }
 
+        // Load card IDs into ArrayList and check for duplicate IDs
         ArrayList<String> cardIdList = new ArrayList<String>();
         for(int i = 0; i < pack.length(); i++) {
             JSONObject obj = pack.getJSONObject(i);
@@ -46,7 +41,6 @@ public class PackageRepository {
                     return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Duplicate card ID in pack");
                 }
             }
-
             cardIdList.add(obj.getString("Id"));
         }
 
@@ -70,15 +64,12 @@ public class PackageRepository {
             throw new DbAccessException("Card ID query failed", e);
         }
 
-        // Infer type, element and special from cards and register in db
-
-
         String registerQuery = """
                     INSERT INTO card VALUES (?,
                     ?, ?, ?, ?, ?, ?::jsonb)""";
 
+        // Infer type, element and special from cards and register in db
         BattleCardFactory battleCardFactory = new BattleCardFactory();
-
 
         for(int i = 0; i < pack.length(); i++) {
             BattleCard newCard = battleCardFactory.buildBattleCard(pack.getJSONObject(i));
@@ -107,7 +98,7 @@ public class PackageRepository {
             PreparedStatement stmt = this.transactionUnit.prepareStatement(insertPackQuery);
             stmt.setString(1, pack.toString());
         } catch (SQLException e) {
-            throw new DbAccessException(e);
+            throw new DbAccessException("Failed to insert pack");
         }
         return new Response(HttpStatus.CREATED, ContentType.TEXT, "Package and cards successfully created");
 
@@ -118,32 +109,37 @@ public class PackageRepository {
     public Response buyPack(User user) {
 
         // Check if any pack is available in db
-        String query = "SELECT id FROM pack WHERE amount > 0 ORDER BY RANDOM() LIMIT 1";
+        String query = "SELECT id, content FROM pack WHERE amount > 0 ORDER BY RANDOM() LIMIT 1";
         PreparedStatement stmt = this.transactionUnit.prepareStatement(query);
-        ResultSet result = null;
-        JSONArray targetPack = null;
+        int packId = 0;
+        String packContent = "";
 
         try {
+            ResultSet result = null;
             result = stmt.executeQuery();
             if(!result.next()) {
                 return new Response(HttpStatus.NOT_FOUND, ContentType.TEXT, "No card package available for buying");
+            } else {
+                packId = result.getInt(1);
+                packContent = result.getString(2);
             }
-
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
 
+
+        // Insert pack into user stack and update pack count and user coins
+        JSONArray targetPack = null;
         String addQuery = """
                 WITH pk AS (
-                    SELECT id, content FROM pack
-                    WHERE amount > 0
-                    ORDER BY RANDOM()
+                    SELECT content FROM pack
+                    WHERE id = ?
+                    AND amount > 0
                     LIMIT 1
                 ), pu AS (
                     UPDATE pack
                     SET amount = amount - 1
-                    WHERE id = pk.id
+                    WHERE id = ?
                     FROM pk
                 )
                 UPDATE profile
@@ -154,17 +150,16 @@ public class PackageRepository {
 
         try {
             stmt = transactionUnit.prepareStatement(addQuery);
-            stmt.setInt(1, user.getId());
+            stmt.setInt(1, packId);
+            stmt.setInt(2, packId);
+            stmt.setInt(3, user.getId());
             stmt.executeUpdate();
 
         } catch (SQLException e) {
             throw new DbAccessException(e);
         }
 
-
-
-
-        return new Response(HttpStatus.OK, ContentType.JSON, targetPack.toString());
+        return new Response(HttpStatus.OK, ContentType.JSON, packContent);
     }
 
 

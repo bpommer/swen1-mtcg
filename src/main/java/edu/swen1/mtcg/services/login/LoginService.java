@@ -53,29 +53,14 @@ public class LoginService implements IService {
             if(passwordHashed == null || !passwordHashed.equals(foundUser.getPassword())) {
                 return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Invalid username/password provided");
             } else {
-                return controller.login(username);
+                return controller.login(foundUser);
             }
-
-
-
-
-
-        }
-
-        else if(request.getMethod() == RestMethod.GET) {
-
-            return new Response(HttpStatus.NOT_FOUND, ContentType.TEXT, "Unauthorized");
-
 
         }
 
         else {
-            return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Unauthorized");
+            return new Response(HttpStatus.NOT_IMPLEMENTED, ContentType.TEXT, "Not implemented");
         }
-
-
-        //return new Response(HttpStatus.OK, ContentType.TEXT,
-        //        "ProfileService accessed. " + request.getBody());
 
     }
 

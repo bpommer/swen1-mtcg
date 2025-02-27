@@ -25,6 +25,7 @@ public class PackagesService implements IService {
 
     private final String ID_PATTERN_STRING = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$";
     private final PackageController controller;
+    private final int PACKAGE_SIZE = 5;
 
     public PackagesService() { this.controller = new PackageController(); }
 
@@ -38,7 +39,7 @@ public class PackagesService implements IService {
 
             if(foundUser != null && foundUser.getUsername().equals("admin")) {
 
-                // Load body into JSONArray
+                // Load body into JSONArray and check if body is an array
                 JSONArray packArray = null;
                 try {
                     packArray = new JSONArray(request.getBody());
@@ -47,7 +48,7 @@ public class PackagesService implements IService {
                 }
 
                 // Check if array contains exactly 5 elements
-                if(packArray.length() != 5) { return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Error: Bad request"); }
+                if(packArray.length() != PACKAGE_SIZE) { return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Error: Bad request"); }
 
 
                 // Card format validation logic

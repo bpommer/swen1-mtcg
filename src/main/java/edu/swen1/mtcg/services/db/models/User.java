@@ -112,7 +112,7 @@ public class User {
         if(this.name == null) {
             userStats.put("Name", Optional.empty());
         } else {
-            userStats.put("Name", username);
+            userStats.put("Name", name);
         }
 
 
@@ -123,6 +123,17 @@ public class User {
             userStats.put("Losses", 0);
         }
         return userStats;
+    }
+
+    public JSONArray getAllCards() {
+
+        JSONArray stackCards = new JSONArray(stack);
+        JSONArray deckCards = new JSONArray(deck);
+
+        for(int i = 0; i < deckCards.length(); i++) {
+            stackCards.put(deckCards.getJSONObject(i));
+        }
+        return stackCards;
     }
     
     

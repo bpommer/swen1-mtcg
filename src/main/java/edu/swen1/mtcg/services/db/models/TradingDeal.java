@@ -31,6 +31,8 @@ public class TradingDeal {
 
     }
 
+
+
     public JSONObject toJSON() {
 
         JSONObject json = new JSONObject();

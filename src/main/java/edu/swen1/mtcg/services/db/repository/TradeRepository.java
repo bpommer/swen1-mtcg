@@ -7,6 +7,7 @@ import edu.swen1.mtcg.services.db.dbaccess.DbAccessException;
 import edu.swen1.mtcg.services.db.dbaccess.TransactionUnit;
 import edu.swen1.mtcg.services.db.models.TradingDeal;
 import edu.swen1.mtcg.services.db.models.User;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.sql.PreparedStatement;
@@ -118,11 +119,11 @@ public class TradeRepository {
             preparedStatement.setString(2, newDeal.getCardid());
             preparedStatement.setString(3, newDeal.getCardid());
             preparedStatement.setString(4, newDeal.getTradeid());
-            preparedStatement.setInt(5, newDeal.getOwnerId());
+            preparedStatement.setInt(5, user.getId());
             preparedStatement.setString(6, newDeal.getCardid());
             preparedStatement.setString(7, newDeal.getType());
             preparedStatement.setFloat(8, newDeal.getMindamage());
-            preparedStatement.setInt(9, newDeal.getOwnerId());
+            preparedStatement.setInt(9, user.getId());
 
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
@@ -191,7 +192,7 @@ public class TradeRepository {
         return new Response(HttpStatus.OK, ContentType.TEXT, "Trading deal successfully deleted");
 
     }
-    public Response executeTrade(User user, String tradeid, String cardid) {
+    public Response executeTrade(User user, String cardid, String tradeId) {
 
         // Fetch trade from db if it exists
         String tradeQuery = """
@@ -203,14 +204,14 @@ public class TradeRepository {
         TradingDeal deal = null;
         ResultSet targetTrade = null;
         try {
-            preparedStatement.setString(1, tradeid);
+            preparedStatement.setString(1, tradeId);
             targetTrade = preparedStatement.executeQuery();
             if (!targetTrade.next()) {
                 return new Response(HttpStatus.NOT_FOUND, ContentType.TEXT, "The provided deal ID was not found.");
             }
 
-            // Check for trade with self, dmg/type requirement and if user owns the card
-            if (user.getId() == targetTrade.getInt(2)) {
+            // Check for trade with self
+            if (user.getId() == targetTrade.getInt(5)) {
                 return new Response(HttpStatus.FORBIDDEN, ContentType.TEXT,
                         "The offered card is not owned by the user, or the requirements are not met (Type, MinimumDamage), or the offered card is locked in the deck, or the user tries to trade with self");
             }
@@ -228,7 +229,7 @@ public class TradeRepository {
         }
 
         // Check if user owns offered card
-        // and if stats match offer
+        // and if stats match offer requirements
         // (also implicit check if card ID is registered in db)
 
         String checkQuery = """
@@ -294,7 +295,7 @@ public class TradeRepository {
                                     ORDER BY ls.in
                                     LIMIT 1
                                 )
-                            ), uc AS ( -- filter card from buyer stack
+                            ), uc AS (
                                 SELECT ls.st AS newstack
                                 FROM ls
                                 WHERE ls.in = (
@@ -328,8 +329,8 @@ public class TradeRepository {
             preparedStatement.setInt(1, user.getId());
             preparedStatement.setString(2, cardid);
             preparedStatement.setString(3, cardid);
-            preparedStatement.setString(4, tradeid);
-            preparedStatement.setString(5, tradeid);
+            preparedStatement.setString(4, tradeId);
+            preparedStatement.setString(5, tradeId);
             preparedStatement.setInt(6, user.getId());
 
             preparedStatement.executeUpdate();
@@ -340,6 +341,53 @@ public class TradeRepository {
         return new Response(HttpStatus.OK, ContentType.TEXT,
                 "Trading deal successfully executed.");
     }
+
+
+    // Fetch all trades from db
+    public Response getTradeListings() {
+        String query = """
+        SELECT t.id, t.offer, ct.type, t.mindamage FROM trade t
+        INNER JOIN cardtype ct ON ct.id = t.type""";
+
+        try {
+            PreparedStatement preparedStatement = transactionUnit.prepareStatement(query);
+            ResultSet res = null;
+            preparedStatement.executeQuery();
+
+            if(!res.next()) {
+                return new Response(HttpStatus.NO_CONTENT, ContentType.TEXT, "No trading deals available");
+            } else {
+
+                JSONArray jsonArray = new JSONArray();
+
+                do {
+                    TradingDeal deal = new TradingDeal(
+                            res.getString(1),
+                            res.getString(2),
+                            res.getString(3),
+                            res.getFloat(4)
+                    );
+
+                    jsonArray.put(deal.toJSON());
+                } while (res.next());
+
+                return new Response(HttpStatus.OK, ContentType.JSON, jsonArray.toString());
+            }
+
+        } catch (SQLException e) {
+            throw new DbAccessException("Error getting trades listings");
+        }
+
+
+
+
+
+
+
+
+    }
+
+
 
 
 }
