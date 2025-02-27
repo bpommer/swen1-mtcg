@@ -40,8 +40,8 @@ public class PackageRepository {
                 if (obj.has(tempString)) {
                     return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Duplicate card ID in pack");
                 }
+                cardIdList.add(obj.getString("Id"));
             }
-            cardIdList.add(obj.getString("Id"));
         }
 
         // Check if card ID exists in db

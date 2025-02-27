@@ -39,7 +39,6 @@ public class RequestSchemaChecker {
             switch(schemaMap.get(key)) {
                 case STRING:
                     if(!targetNode.get(key).isTextual() || targetNode.get(key).asText().isEmpty()) {
-
                         return false;
                     }
                     break;

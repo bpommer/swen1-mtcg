@@ -49,13 +49,15 @@ public class TradingService implements IService {
 
         else if(request.getMethod() == RestMethod.POST) {
 
-            // Check if JSON is well-formed and keys contain proper value types
-            if(!RequestSchemaChecker.JsonKeyValueCheck(request.getBody(), SchemaWhitelists.TRADEDEAL)) {
-                return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Bad request");
-            }
+
 
 
             if(request.getPathParts().size() == 1) {
+
+                // Check if JSON is well-formed and keys contain proper value types
+                if(!RequestSchemaChecker.JsonKeyValueCheck(request.getBody(), SchemaWhitelists.TRADEDEAL)) {
+                    return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Bad request");
+                }
 
                 JSONObject dealJson = new JSONObject(request.getBody());
 

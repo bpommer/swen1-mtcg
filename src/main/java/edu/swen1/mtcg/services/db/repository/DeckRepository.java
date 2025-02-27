@@ -79,7 +79,7 @@ public class DeckRepository implements IQueryBuilder {
     public Response updateDeck(JSONArray newDeck, User user) {
 
         if(newDeck.length() != DECK_SIZE) {
-            return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "Invalid deck size");
+            return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "The provided deck did not include the required amount of cards");
         }
 
 
@@ -208,16 +208,28 @@ public class DeckRepository implements IQueryBuilder {
                     WHERE id = ?
                 )
                 UPDATE profile
-                SET deck = '[]'::jsonb || c1.card1 || c2.card2 || c3.card3 || c4.card4
+                SET deck = '[]'::jsonb || c1.card1 || c2.card2 || c3.card3 || c4.card4,
+                stack = COALESCE(fl.newStack, '[]'::jsonb)
                 WHERE id = ?
                 """;
 
+            try {
+                PreparedStatement setup = this.transactionUnit.prepareStatement(setDeckQuery);
 
+                setup.setInt(1, user.getId());
+                setup.setString(2, newDeck.get(1).toString());
+                setup.setString(3, newDeck.get(2).toString());
+                setup.setString(4, newDeck.get(3).toString());
+                setup.setString(5, newDeck.get(4).toString());
+                setup.setInt(6, user.getId());
+                setup.setInt(7, user.getId());
 
+                setup.executeUpdate();
+            } catch(SQLException e) {
+                throw new DbAccessException(e);
+            }
 
-
-
-
+            return new Response(HttpStatus.OK, ContentType.TEXT, "The deck has been successfully configured");
 
 
     }

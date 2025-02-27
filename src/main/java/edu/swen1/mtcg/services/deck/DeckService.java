@@ -87,7 +87,7 @@ public class DeckService implements IService {
             }
             // Check if array contains exactly 4 cards
             if(requestArray.length() != DECK_SIZE) {
-                return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, HttpStatus.BAD_REQUEST.statusMessage);
+                return new Response(HttpStatus.BAD_REQUEST, ContentType.JSON, "The provided deck did not include the required amount of cards");
             }
 
             // Check if array only consists of strings

@@ -46,7 +46,7 @@ public class RegistrationController extends Controller {
             if(res != null) {
                 return new Response(HttpStatus.OK, ContentType.JSON, res.getUserData().toString());
             } else {
-                return new Response(HttpStatus.NOT_FOUND, ContentType.JSON, "{ \"error\": \"User not found\" }");
+                return new Response(HttpStatus.NOT_FOUND, ContentType.TEXT, "User not found");
             }
 
         } catch (Exception e) {

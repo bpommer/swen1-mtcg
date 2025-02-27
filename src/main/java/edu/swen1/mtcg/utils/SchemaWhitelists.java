@@ -32,8 +32,6 @@ public enum SchemaWhitelists {
             Map.entry("MinimumDamage", FieldValueType.NUMBER)
     ));
 
-
-
     public final Map<String, FieldValueType> whitelist;
 
     SchemaWhitelists(Map<String, FieldValueType> set) { this.whitelist = set; }

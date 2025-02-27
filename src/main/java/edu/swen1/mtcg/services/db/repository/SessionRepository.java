@@ -154,9 +154,14 @@ public class SessionRepository {
     // Fetch user data from token
     // Returns null if token is invalid or user does not exist
     public static User fetchUserFromToken(String token) {
+
+        if(token == null || token.isEmpty()) {
+            return null;
+        }
+
         String[] splitToken = token.split(" ", 2);
 
-        if(!splitToken[0].equals("Bearer")) {
+        if(!splitToken[0].equals("Bearer") ) {
             return null;
         }
 

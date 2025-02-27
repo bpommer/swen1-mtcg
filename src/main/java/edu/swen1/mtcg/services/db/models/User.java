@@ -110,7 +110,7 @@ public class User {
         JSONObject userStats = new JSONObject();
 
         if(this.name == null) {
-            userStats.put("Name", Optional.empty());
+            userStats.put("Name", JSONObject.NULL);
         } else {
             userStats.put("Name", name);
         }

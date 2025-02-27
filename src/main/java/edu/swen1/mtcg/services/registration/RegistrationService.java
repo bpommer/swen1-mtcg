@@ -94,12 +94,14 @@ public class RegistrationService implements IService {
             List<String> path = request.getPathParts();
             String authToken = request.getHeaderMap().getAuthHeader();
 
-            if(path.size() == 2 && authToken != null) {
+            User foundUser = SessionRepository.fetchUserFromToken(authToken);
+
+
+            if(path.size() == 2 && foundUser != null) {
 
                 String targetUser = path.get(1);
-                User foundUser = SessionRepository.fetchUserFromToken(authToken);
 
-                if(foundUser != null && (foundUser.getUsername().equals(targetUser)
+                if((foundUser.getUsername().equals(targetUser)
                         || foundUser.getUsername().equals("admin"))
                     && RequestSchemaChecker.JsonKeyValueCheck(request.getBody(), SchemaWhitelists.USER_DATA)) {
 
@@ -112,15 +114,13 @@ public class RegistrationService implements IService {
                     return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Access token is missing or invalid");
                 }
             }
-            else if (path.size() == 2) {
-                return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Access token is missing or invalid");
-            }
             else {
                 return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Invalid request");
             }
 
+        } else {
+            return new Response(HttpStatus.NOT_IMPLEMENTED, ContentType.TEXT, HttpStatus.NOT_IMPLEMENTED.statusMessage);
         }
-        return new Response(HttpStatus.NOT_FOUND, ContentType.TEXT, "Service not found");
 
     }
 
