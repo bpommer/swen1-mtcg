@@ -14,8 +14,8 @@ import org.json.JSONObject;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Instant;
-import java.util.Objects;
+import java.sql.Types;
+import java.util.HashMap;
 
 
 public class SessionRepository {
@@ -29,9 +29,7 @@ public class SessionRepository {
     // POST /users
     public Response registerUser(String username, String password) {
 
-            String[] hashPair = HashGenerator.generateHashPair(password);
-            String token = username + "-mtcgToken";
-            String hashedToken = HashGenerator.generateHash(token);
+        HashMap<String, String> hashpair = HashGenerator.generateHashPair(password);
 
             try {
                 // System.out.println(hashPair[0] + " " + hashPair[1] + " " + username);
@@ -40,14 +38,14 @@ public class SessionRepository {
                         VALUES (DEFAULT, ?, ?, ?, DEFAULT, DEFAULT, DEFAULT, ?, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT)
                        """);
 
-                if(hashPair[0] == null || hashPair[1] == null) {
+                if(hashpair == null) {
                     return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Internal server error");
                 }
 
                 stmt.setString(1, username);
-                stmt.setString(2, hashPair[0]);
-                stmt.setString(3, hashPair[1]);
-                stmt.setString(4, hashedToken);
+                stmt.setString(2, hashpair.get("password").toString());
+                stmt.setString(3, hashpair.get("salt").toString());
+                stmt.setNull(4, Types.VARCHAR);
 
                 stmt.executeUpdate();
                 return new Response(HttpStatus.CREATED, ContentType.TEXT, "User successfully created");
@@ -56,6 +54,42 @@ public class SessionRepository {
                 return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Internal server error");
             }
     }
+
+    public Response loginUser(String username) {
+
+            String newToken = username + "-mtcgToken";
+            String hashedToken = HashGenerator.generateHash(newToken);
+
+            String tokenQuery = """
+                    UPDATE profile
+                    SET token = ?
+                    WHERE username = ?""";
+
+            try {
+                PreparedStatement stmt = this.transactionUnit.prepareStatement(tokenQuery);
+                stmt.setString(1, hashedToken);
+                stmt.setString(2, username);
+                stmt.executeUpdate();
+            } catch(SQLException e) {
+                throw new DbAccessException("Error in login");
+            }
+
+            JSONObject response = new JSONObject();
+            response.put("token", newToken);
+            return new Response(HttpStatus.OK, ContentType.JSON, response.toString());
+
+
+
+
+
+
+
+
+
+
+
+    }
+
 
 
     // PUT /users/{username}
@@ -203,7 +237,7 @@ public class SessionRepository {
 
     }
 
-    public static JSONArray fetchAllUserStats() {
+    public static JSONArray fetchScoreboard() {
         TransactionUnit tempUnit = new TransactionUnit();
 
         String query = "SELECT * FROM profile ORDER BY elo DESC";

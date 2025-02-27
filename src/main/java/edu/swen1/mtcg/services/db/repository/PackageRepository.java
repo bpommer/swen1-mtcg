@@ -26,14 +26,14 @@ import static edu.swen1.mtcg.services.db.repository.CardDataRepository.getCardHa
 import static edu.swen1.mtcg.utils.HashGenerator.generateHash;
 
 public class PackageRepository {
-
+    public final int CARD_COUNT = 5;
     private TransactionUnit transactionUnit;
     public PackageRepository(TransactionUnit transactionUnit) { this.transactionUnit = transactionUnit;}
 
 
     public Response registerPackage(JSONArray pack) {
 
-        if(pack.length() != 5) {
+        if(pack.length() != CARD_COUNT) {
             return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Pack does not contain exactly 5 cards");
         }
 

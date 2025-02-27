@@ -141,8 +141,12 @@ CREATE TABLE profile
     bio TEXT DEFAULT NULL,
     image TEXT DEFAULT NULL,
     wins int DEFAULT 0 NOT NULL,
-    lastlogin timestamp DEFAULT NOW() NOT NULL
+    lastlogin timestamp DEFAULT NOW() NOT NULL,
 );
+
+select * from profile;
+
+
 
 GRANT SELECT, INSERT, UPDATE ON profile TO webserver;
 GRANT ALL ON profile TO dbadmin;

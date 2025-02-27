@@ -9,15 +9,18 @@ import edu.swen1.mtcg.utils.Controller;
 
 public class LoginController extends Controller {
 
-    public Response login(String username, String password){
+    public Response login(String username){
         TransactionUnit transactionUnit = new TransactionUnit();
 
         try(transactionUnit) {
-            Response res = new SessionRepository(transactionUnit).registerUser(username, password);
-            transactionUnit.dbCommit();
+            Response res = new SessionRepository(transactionUnit).loginUser(username);
+            if(res.getStatusCode() < 200 || res.getStatusCode() > 299) {
+                transactionUnit.dbRollback();
+            } else {
+                transactionUnit.dbCommit();
+            }
             return res;
         } catch (Exception e) {
-
             e.printStackTrace();
             transactionUnit.dbRollback();
             return new Response(

@@ -4,42 +4,45 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class HashGenerator {
 
-    // Generate salt/hash pair for new user
-    public static String[] generateHashPair(String password) {
-        try {
-            String[] hashPair = new String[2];
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            hashPair[1] = generateSalt();
-            String saltedPassword = password + hashPair[1];
+    public static final String HASH_ALGORITHM = "SHA-256";
+    public static final int SALT_LENGTH = 16;
 
-            byte[] hash = digest.digest(saltedPassword.getBytes());
-            hashPair[0] = Base64.getEncoder().encodeToString(hash);
-            return hashPair;
+    // Generate salt/hash pair for new user
+    public static HashMap<String, String> generateHashPair(String password) {
+
+        String salt = generateSalt();
+        String saltedPassword = password + salt;
+        String hashedPassword = HashGenerator.generateHash(saltedPassword);
+
+        if(salt == null || hashedPassword == null) {
+            return null;
         }
-        catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        return null;
+
+        HashMap<String, String> hashPairMap = new HashMap<>();
+        hashPairMap.put("password", hashedPassword);
+        hashPairMap.put("salt", salt);
+        return hashPairMap;
     }
 
+    // Digest string to hash
     public static String generateHash(String password) {
         try {
-
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            MessageDigest digest = MessageDigest.getInstance(HASH_ALGORITHM);
             byte[] hash = digest.digest(password.getBytes());
             return Base64.getEncoder().encodeToString(hash);
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
             return null;
         }
     }
 
+    // Generate random salt
     public static String generateSalt() {
-        int saltLength = 16;
-        byte[] salt = new byte[saltLength];
+        byte[] salt = new byte[SALT_LENGTH];
         SecureRandom random = new SecureRandom();
         random.nextBytes(salt);
         return Base64.getEncoder().encodeToString(salt);

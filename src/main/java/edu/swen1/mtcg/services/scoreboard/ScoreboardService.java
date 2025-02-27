@@ -25,7 +25,7 @@ public class ScoreboardService implements IService {
                 return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Access token missing or invalid");
             }
 
-            JSONArray board = SessionRepository.fetchAllUserStats();
+            JSONArray board = SessionRepository.fetchScoreboard();
 
             if(board == null || board.length() == 0) {
                 return new Response(HttpStatus.OK, ContentType.JSON, new JSONArray().toString());

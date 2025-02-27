@@ -7,6 +7,8 @@ import lombok.Setter;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.Optional;
+
 
 @Getter
 @Setter
@@ -27,6 +29,7 @@ public class User {
     private String image;
     private int wins;
     private String lastLogin;
+    private String tokenSalt;
 
 
 
@@ -51,8 +54,34 @@ public class User {
         this.image = image;
         this.wins = wins;
         this.lastLogin = lastLogin;
-
     }
+
+    public User(Integer id, String username, String password, String salt,
+                Integer coins, Integer playCount, Integer elo, String token,
+                String stack, String deck, String name, String bio,
+                String image, int wins, String lastLogin, String tokenSalt) {
+
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.salt = salt;
+        this.coins = coins;
+        this.playCount = playCount;
+        this.elo = elo;
+        this.token = token;
+        this.stack = stack;
+        this.deck = deck;
+        this.name = name;
+        this.bio = bio;
+        this.image = image;
+        this.wins = wins;
+        this.lastLogin = lastLogin;
+        this.tokenSalt = tokenSalt;
+    }
+
+
+
+
 
     // Constructor for login/registration
     public User(String username, String password, RestMethod method) {
@@ -96,7 +125,14 @@ public class User {
     
     public JSONObject getUserStats() {
         JSONObject userStats = new JSONObject();
-        userStats.put("Name", username);
+
+        if(this.name == null) {
+            userStats.put("Name", Optional.empty());
+        } else {
+            userStats.put("Name", username);
+        }
+
+
         userStats.put("Elo", elo);
         userStats.put("Wins", wins);
         userStats.put("Losses", this.playCount - this.wins);

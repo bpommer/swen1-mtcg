@@ -9,7 +9,12 @@ import edu.swen1.mtcg.server.Request;
 import edu.swen1.mtcg.server.Response;
 import edu.swen1.mtcg.server.IService;
 import edu.swen1.mtcg.services.db.dbaccess.TransactionUnit;
+import edu.swen1.mtcg.services.db.models.User;
 import edu.swen1.mtcg.services.db.repository.SessionRepository;
+import edu.swen1.mtcg.utils.HashGenerator;
+import edu.swen1.mtcg.utils.RequestSchemaChecker;
+import edu.swen1.mtcg.utils.SchemaWhitelists;
+import org.json.JSONObject;
 
 import java.io.IOException;
 
@@ -22,27 +27,39 @@ public class LoginService implements IService {
     @Override
     public Response handleRequest(Request request) {
 
-        String username;
-        String password;
+
         if(request.getMethod() == RestMethod.POST) {
 
-            ObjectMapper mapper = new ObjectMapper();
-            try {
-                JsonNode node = mapper.readTree(request.getBody());
-
-                username = node.get("Username").asText();
-                password = node.get("Password").asText();
-
-            } catch (IOException e) {
-                e.printStackTrace();
+            // Check if body has proper formatting
+            if(!RequestSchemaChecker.JsonKeyValueCheck(
+                    request.getBody(), SchemaWhitelists.USER_CREDENTIALS)) {
                 return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Bad Request");
+
             }
 
-            try {
-                return controller.login(username, password);
-            } catch (Exception e) {
-                return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Error processing request");
+            JSONObject credentials = new JSONObject(request.getBody());
+
+            String username = credentials.getString("Username");
+            String password = credentials.getString("Password");
+            User foundUser = SessionRepository.fetchUserFromName(username);
+
+            // Check if username exists
+            if(foundUser == null) {
+                return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Invalid username/password provided");
             }
+
+            // Check for correct password
+            String passwordHashed = HashGenerator.generateHash(password + foundUser.getSalt());
+            if(passwordHashed == null || !passwordHashed.equals(foundUser.getPassword())) {
+                return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Invalid username/password provided");
+            } else {
+                return controller.login(username);
+            }
+
+
+
+
+
         }
 
         else if(request.getMethod() == RestMethod.GET) {
