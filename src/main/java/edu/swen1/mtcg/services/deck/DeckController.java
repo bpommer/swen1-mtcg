@@ -18,11 +18,11 @@ public class DeckController extends Controller {
 
 
     // PUT /deck
-    public Response changeDeck(JSONArray newDeck, User user) {
+    public Response changeDeck(User user) {
         TransactionUnit transactionUnit = new TransactionUnit();
 
         try {
-            Response res = new DeckRepository(transactionUnit).updateDeck(newDeck, user);
+            Response res = new DeckRepository(transactionUnit).updateDeck(user);
             if(res.getStatusCode() < 200 || res.getStatusCode() > 299) {
                 transactionUnit.dbRollback();
             } else {

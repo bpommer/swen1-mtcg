@@ -9,12 +9,16 @@ import java.util.HashMap;
 public class HashGenerator {
 
     public static final String HASH_ALGORITHM = "SHA-256";
-    public static final int SALT_LENGTH = 16;
+    public static final int SALT_LENGTH = 30;
 
     // Generate salt/hash pair for new user
     public static HashMap<String, String> generateHashPair(String password) {
 
-        String salt = generateSalt();
+        if(password == null || password.isEmpty()) {
+            return null;
+        }
+
+        String salt = HashGenerator.generateSalt();
         String saltedPassword = password + salt;
         String hashedPassword = HashGenerator.generateHash(saltedPassword);
 
@@ -34,6 +38,9 @@ public class HashGenerator {
     // Digest string to hash
     public static String generateHash(String password) {
         try {
+            if(password == null || password.isEmpty()) {
+                return null;
+            }
             MessageDigest digest = MessageDigest.getInstance(HASH_ALGORITHM);
             byte[] hash = digest.digest(password.getBytes());
             return Base64.getEncoder().encodeToString(hash);

@@ -10,6 +10,7 @@ import edu.swen1.mtcg.services.db.models.User;
 import edu.swen1.mtcg.services.db.repository.CardDataRepository;
 import edu.swen1.mtcg.services.db.repository.TradeRepository;
 import edu.swen1.mtcg.utils.Controller;
+import org.json.JSONObject;
 
 public class TradingController extends Controller {
 
@@ -54,11 +55,11 @@ public class TradingController extends Controller {
 
     }
 
-    public Response makeTrade(User user, String cardId, String tradeId) {
+    public Response makeTrade(User user, JSONObject card, String tradeId) {
         TransactionUnit transactionUnit = new TransactionUnit();
 
         try(transactionUnit) {
-            Response res = new TradeRepository(transactionUnit).executeTrade(user, cardId, tradeId);
+            Response res = new TradeRepository(transactionUnit).executeTrade(user, card, tradeId);
             if(res.getStatusCode() < 200 || res.getStatusCode() > 299) {
                 transactionUnit.dbRollback();
             } else {

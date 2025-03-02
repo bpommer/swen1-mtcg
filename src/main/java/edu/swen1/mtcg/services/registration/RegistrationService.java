@@ -44,7 +44,7 @@ public class RegistrationService implements IService {
                 String password = credentials.getString("Password");
 
                 if(SessionRepository.fetchUserFromName(username) != null) {
-                    return new Response(HttpStatus.CONFLICT, ContentType.TEXT, "User already exists");
+                    return new Response(HttpStatus.CONFLICT, ContentType.TEXT, "User already exists\n");
                 }
 
 
@@ -52,7 +52,7 @@ public class RegistrationService implements IService {
 
             } catch (Exception e) {
                 e.printStackTrace();
-                return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Bad Request");
+                return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, HttpStatus.BAD_REQUEST.statusMessage);
             }
         }
 
@@ -111,7 +111,7 @@ public class RegistrationService implements IService {
                     return controller.updateUser(targetUser, data.getString("Name"),
                             data.getString("Bio"), data.getString("Image"));
                 } else {
-                    return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Access token is missing or invalid");
+                    return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Access token is missing or invalid\n");
                 }
             }
             else {

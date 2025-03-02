@@ -12,20 +12,21 @@
 
  */
 
-CREATE EXTENSION IF NOT EXISTS CITEXT;
-GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO webserver;
-GRANT ALL ON SCHEMA public TO dbadmin;
+
 
 CREATE TABLE cardtype (
     id serial PRIMARY KEY,
-    type CITEXT UNIQUE NOT NULL
+    type TEXT UNIQUE NOT NULL
 );
+
 
 GRANT SELECT ON cardtype TO webserver;
 GRANT ALL ON cardtype TO dbadmin;
 
 INSERT INTO cardtype VALUES(DEFAULT, 'Monster');
 INSERT INTO cardtype VALUES(DEFAULT, 'Spell');
+
+
 
 
 CREATE TABLE specialtype (
@@ -133,23 +134,19 @@ CREATE TABLE profile
     coins int DEFAULT 20 NOT NULL CHECK (coins >= 0),
     playcount int DEFAULT 0 NOT NULL CHECK (playcount >= 0),
     elo int DEFAULT 100 NOT NULL CHECK (elo >= 0),
-    token TEXT NOT NULL,
+    token TEXT,
     stack JSONB DEFAULT '[]'::jsonb NOT NULL,
     deck JSONB DEFAULT '[]'::jsonb NOT NULL,
     name TEXT default NULL,
     bio TEXT DEFAULT NULL,
     image TEXT DEFAULT NULL,
     wins int DEFAULT 0 NOT NULL,
-    lastlogin timestamp DEFAULT NOW() NOT NULL,
+    lastlogin timestamp DEFAULT NOW() NOT NULL
 );
-
-select * from profile;
-
 
 
 GRANT SELECT, INSERT, UPDATE ON profile TO webserver;
 GRANT ALL ON profile TO dbadmin;
-
 
 CREATE TABLE trade
 (
@@ -168,5 +165,9 @@ CREATE TABLE trade
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON trade TO webserver;
 GRANT ALL ON trade TO dbadmin;
+
+GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO webserver;
+GRANT ALL ON SCHEMA public TO dbadmin;
+
 
 

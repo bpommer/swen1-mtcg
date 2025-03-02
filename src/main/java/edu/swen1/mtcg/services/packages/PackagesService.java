@@ -10,6 +10,7 @@ import edu.swen1.mtcg.server.IService;
 
 import edu.swen1.mtcg.services.db.models.User;
 import edu.swen1.mtcg.services.db.repository.SessionRepository;
+import edu.swen1.mtcg.utils.HashGenerator;
 import edu.swen1.mtcg.utils.RequestSchemaChecker;
 import edu.swen1.mtcg.utils.SchemaWhitelists;
 import org.json.JSONArray;

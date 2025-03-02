@@ -25,6 +25,7 @@ public class RequestBuilder {
                 throw new IOException("Illegal request method: " + methodString);
             }
 
+            System.out.println(parts[1]);
             setPath(request, parts[1]);
 
             line = reader.readLine();

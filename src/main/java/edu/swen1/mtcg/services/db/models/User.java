@@ -31,7 +31,9 @@ public class User {
     private String lastLogin;
     private String tokenSalt;
 
+    public User() {
 
+    }
 
 
     public User(Integer id, String username, String password, String salt,
@@ -109,19 +111,22 @@ public class User {
     public JSONObject getUserStats() {
         JSONObject userStats = new JSONObject();
 
-        if(this.name == null) {
-            userStats.put("Name", JSONObject.NULL);
-        } else {
-            userStats.put("Name", name);
-        }
-
-
-        userStats.put("Elo", elo);
-        userStats.put("Wins", wins);
-        userStats.put("Losses", this.playCount - this.wins);
         if((this.playCount - this.wins) < 0) {
             userStats.put("Losses", 0);
+        } else {
+            userStats.put("Losses", this.playCount - this.wins);
         }
+
+        userStats.put("Wins", wins);
+        userStats.put("Elo", elo);
+
+        if (this.name != null) {
+            userStats.put("Name", name);
+        } else {
+            userStats.put("Name", JSONObject.NULL);
+        }
+
+
         return userStats;
     }
 

@@ -34,40 +34,48 @@ public class BattleCardFactory {
 
         String name = rawCard.getString("Name");
 
-        card.setElementId(inferElementFromName(name));
-        card.setTypeId(inferCardTypeFromName(name));
-        card.setSpecialId(inferSpecialFromName(name));
+        inferCardTypeFromName(card, name);
+        inferElementFromName(card, name);
+        inferSpecialFromName(card, name);
 
         return card;
     }
 
-    private int inferElementFromName(String name) {
+    private void inferElementFromName(BattleCard card, String name) {
 
         for(String key : elementMap.keySet()) {
             if(name.contains(key)) {
-                return elementMap.get(key);
+                card.putProperty("Element", key);
+                card.setElementId(elementMap.get(key));
+                return;
             }
         }
-        return 1;
+        card.putProperty("Element", "Normal");
+        card.setElementId(1);
     }
 
 
-    private @Nullable Integer inferSpecialFromName(String name) {
+    private void inferSpecialFromName(BattleCard card, String name) {
         for(String key : specialMap.keySet()) {
             if(name.contains(key)) {
-                return specialMap.get(key);
+                card.putProperty("Special", key);
+                card.setSpecialId(specialMap.get(key));
+                return;
             }
         }
-        return null;
+        card.setSpecialId(null);
     }
 
-    private int inferCardTypeFromName(String name) {
+    private void inferCardTypeFromName(BattleCard card, String name) {
         for(String key : cardTypeMap.keySet()) {
             if(name.contains(key)) {
-                return cardTypeMap.get(key);
+                card.putProperty("Type", key);
+                card.setTypeId(cardTypeMap.get(key));
+                return;
             }
         }
-        return 1;
+        card.putProperty("Type", "Monster");
+        card.setTypeId(1);
     }
 
 

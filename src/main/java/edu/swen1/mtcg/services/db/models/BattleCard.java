@@ -12,36 +12,38 @@ import static edu.swen1.mtcg.services.db.repository.CardDataRepository.getBattle
 
 public class BattleCard extends Card {
 
-    private String type;
-    private String special;
-    private String element;
 
-    @Getter
-    @Setter
-    private int typeId;
-    @Getter
-    @Setter
+    @Getter @Setter
+    private Integer typeId;
+    @Getter @Setter
     private Integer specialId;
+    @Getter @Setter
+    private Integer elementId;
     @Getter
-    @Setter
-    private int elementId;
+    private HashMap<String, String> properties = new HashMap<>();
 
     public BattleCard(String id, String name, float damage) {
         super(id, name, damage);
     }
 
+    public BattleCard(BattleCard card) {
+        super(card.getId(), card.getName(), card.getDamage());
+        this.typeId = card.getTypeId();
+        this.specialId = card.getSpecialId();
+        this.elementId = card.getElementId();
+        this.properties = card.getProperties();
+    }
+
+
+
     public BattleCard(JSONObject cardJson) {
         super(cardJson);
     }
 
-
-    public BattleCard(String id, String name, float damage, String element, String cardType, String special) {
-        super(id, name, damage);
-
-        this.type = cardType;
-        this.element = element;
-        this.special = special;
+    public void putProperty(String key, String value) {
+        properties.put(key, value);
     }
+
 
 
 

@@ -10,6 +10,96 @@
 select * from profile;
 select * from card;
 
+--
+
+WITH ls AS (
+    SELECT
+        jsonb_array_elements(stack) AS st,
+        generate_series(1, jsonb_array_length(stack)) AS in
+    FROM profile
+    WHERE profile.id = ?
+    ORDER BY (stack ->>'Id')::UUID
+), c1 AS (
+    SELECT ls.st, ls.in AS in1
+    FROM ls
+    WHERE ls.st->>'Id' = '99f8f8dc-e25e-4a95-aa2c-782823f36e2a'
+    LIMIT 1
+), c2 AS (
+    SELECT ls.st, ls.in AS in2
+    FROM ls, c1
+    WHERE ls.st->>'Id' = 'd6e9c720-9b5a-40c7-a6b2-bc34752e3463'
+      AND ls.in != c1.in1
+    LIMIT 1
+), c3 AS (
+    SELECT ls.st, ls.in AS in3
+    FROM ls, c1, c2
+    WHERE ls.st->>'Id' = '74635fae-8ad3-4295-9139-320ab89c2844'
+      AND ls.in NOT IN (c1.in1, c2.in2)
+    LIMIT 1
+), c4 AS (
+    SELECT ls.st, ls.in
+    FROM ls, c1, c2, c3
+    WHERE ls.st->>'Id' = '74635fae-8ad3-4295-9139-320ab89c2844'
+      AND ls.in NOT IN (c1.in1, c2.in2, c3.in3)
+    LIMIT 1
+)
+SELECT COUNT(*) FROM (
+    SELECT * FROM c1
+    UNION ALL
+    SELECT * FROM c2
+    UNION ALL
+    SELECT * FROM c3
+    UNION ALL
+    SELECT * FROM c4
+) AS count;
+
+select * from card;
+WITH ls AS (
+    SELECT
+        jsonb_array_elements(stack) AS st,
+        generate_series(1, jsonb_array_length(stack)) AS in
+    FROM profile
+    WHERE profile.id = 2
+    ORDER BY (stack ->>'Id')::UUID
+), c1 AS (
+    SELECT ls.st AS card1, ls.in AS in1
+    FROM ls
+    WHERE st->>'Id' = '99f8f8dc-e25e-4a95-aa2c-782823f36e2a'
+    LIMIT 1
+), c2 AS (
+    SELECT ls.st AS card2, ls.in AS in2
+    FROM ls, c1
+    WHERE st->>'Id' = 'd6e9c720-9b5a-40c7-a6b2-bc34752e3463'
+      AND ls.in != c1.in1
+    LIMIT 1
+), c3 AS (
+    SELECT ls.st AS card3, ls.in AS in3
+    FROM ls, c1, c2
+    WHERE st->>'Id' = '74635fae-8ad3-4295-9139-320ab89c2844'
+      AND ls.in NOT IN (c1.in1, c2.in2)
+    LIMIT 1
+), c4 AS (
+    SELECT ls.st AS card4, ls.in AS in4
+    FROM ls, c1, c2, c3
+    WHERE st->>'Id' = '74635fae-8ad3-4295-9139-320ab89c2844'
+      AND ls.in NOT IN (c1.in1, c2.in2, c3.in3)
+    LIMIT 1
+), fl AS (
+    SELECT jsonb_agg(ls.st) AS newstack
+    FROM ls, c1, c2, c3, c4
+    WHERE ls.in NOT IN (c1.in1, c2.in2, c3.in3, c4.in4)
+)
+UPDATE profile
+SET deck = '[]'::jsonb || c1.card1 || c2.card2 || c3.card3 || c4.card4,
+stack = COALESCE(fl.newStack, '[]'::jsonb)
+FROM c1, c2, c3, c4, fl
+WHERE id = 2;
+
+update profile
+set deck = '[]'::jsonb
+where id = 2;
+
+
 -- ownership query
 
 SELECT
@@ -51,23 +141,26 @@ INSERT INTO card VALUES ('845f0dc7-37d0-426e-994e-43fc3ac83c08',
                          '{"Id":"845f0dc7-37d0-426e-994e-43fc3ac83c08", "Name":"WaterGoblin", "Damage": 10.0}'::jsonb);
 
 select * from card;
+select * from profile;
 
--- Transfer card to othe account
-
-
+UPDATE profile
+SET stack = '[]'::jsonb
+WHERE id = 2;
 
 -- Give user card to stack
 UPDATE profile
-SET stack = stack || '{"Id":"27051a20-8580-43ff-a473-e986b52f297a", "Name":"FireElf", "Damage": 28.0}'::jsonb
-WHERE id = 1;
+SET stack = stack || '{"Id":"99f8f8dc-e25e-4a95-aa2c-782823f36e2a", "Name":"Dragon", "Damage": 50.0}'::jsonb
+WHERE id = 2;
+
+
 
 UPDATE profile
 SET stack = stack || '{"Id":"d6e9c720-9b5a-40c7-a6b2-bc34752e3463", "Name":"Knight", "Damage": 20.0}'::jsonb
-WHERE id = 1;
+WHERE id = 2;
 
 UPDATE profile
 SET stack = stack || '{"Id":"74635fae-8ad3-4295-9139-320ab89c2844", "Name":"FireSpell", "Damage": 55.0}'::jsonb
-WHERE id = 1;
+WHERE id = 2;
 
 
 SELECT jsonb_path_query(stack,
@@ -138,7 +231,7 @@ SET stack = COALESCE(fl.newstack, '[]'::jsonb)  || (tc.obj::jsonb)
 FROM fl, tc
 WHERE id = 2;
 
-select * from trade;
+select * from pack;
 select * from profile;
 
 
@@ -330,5 +423,56 @@ insert into profile values (
                                default,
                                default
                            );
+
+
+SELECT t.id, t.offer, ct.type, t.mindamage, t.owner
+FROM trade t
+JOIN cardtype ct
+ON ct.id = t.type
+WHERE t.id = '6cd85277-4590-49d4-b0cf-ba0a921faad0'
+LIMIT 1;
+
+
+WITH ls AS (
+    SELECT
+        jsonb_array_elements(stack) AS st,
+        generate_series(1, jsonb_array_length(stack)) AS in
+    FROM profile
+    WHERE profile.id = 1
+    ORDER BY (stack ->>'Id')::UUID
+), c1 AS (
+    SELECT ls.st, ls.in AS in1
+    FROM ls
+    WHERE ls.st->>'Id' = '644808c2-f87a-4600-b313-122b02322fd5'
+    LIMIT 1
+), c2 AS (
+    SELECT ls.st, ls.in AS in2
+    FROM ls, c1
+    WHERE ls.st->>'Id' = '4ec8b269-0dfa-4f97-809a-2c63fe2a0025'
+      AND ls.in != c1.in1
+    LIMIT 1
+), c3 AS (
+    SELECT ls.st, ls.in AS in3
+    FROM ls, c1, c2
+    WHERE ls.st->>'Id' = '91a6471b-1426-43f6-ad65-6fc473e16f9f'
+      AND ls.in NOT IN (c1.in1, c2.in2)
+    LIMIT 1
+), c4 AS (
+    SELECT ls.st, ls.in
+    FROM ls, c1, c2, c3
+    WHERE ls.st->>'Id' = 'b017ee50-1c14-44e2-bfd6-2c0c5653a37c'
+      AND ls.in NOT IN (c1.in1, c2.in2, c3.in3)
+    LIMIT 1
+)
+SELECT COUNT(*) FROM (
+                         SELECT * FROM c1
+                         UNION ALL
+                         SELECT * FROM c2
+                         UNION ALL
+                         SELECT * FROM c3
+                         UNION ALL
+                         SELECT * FROM c4
+                     ) AS count
+
 
 

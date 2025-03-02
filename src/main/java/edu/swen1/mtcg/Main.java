@@ -6,6 +6,7 @@ import edu.swen1.mtcg.services.deck.DeckService;
 import edu.swen1.mtcg.services.packages.PackagesService;
 import edu.swen1.mtcg.services.scoreboard.ScoreboardService;
 import edu.swen1.mtcg.services.stats.StatsService;
+import edu.swen1.mtcg.services.trading.TradingService;
 import edu.swen1.mtcg.services.transactions.TransactionsService;
 import edu.swen1.mtcg.utils.Router;
 
@@ -38,6 +39,7 @@ public class Main {
         router.newService("/scoreboard", new ScoreboardService());
         router.newService("/stats", new StatsService());
         router.newService("/transactions", new TransactionsService());
+        router.newService("/tradings", new TradingService());
 
         return router;
 

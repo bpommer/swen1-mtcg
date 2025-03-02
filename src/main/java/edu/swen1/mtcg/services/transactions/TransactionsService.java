@@ -28,10 +28,10 @@ public class TransactionsService implements IService {
             User user = SessionRepository.fetchUserFromToken(token);
 
             if(user == null) {
-                return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Access token missing or invalid");
+                return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Access token missing or invalid.\n");
             } else {
                 if(user.getCoins() < 5) {
-                    return new Response(HttpStatus.FORBIDDEN, ContentType.TEXT, "Not enough money for buying a card package");
+                    return new Response(HttpStatus.FORBIDDEN, ContentType.TEXT, "Not enough money for buying a card package.\n");
                 }
                 return controller.purchasePack(user);
             }

@@ -56,6 +56,11 @@ public class Request {
 
     // Create Hashmap for provided params
     public void setParams(String params) {
+
+        if(params == null) {
+            return;
+        }
+
         if(params.contains("=")) {
             String[] parts = params.split("&", PARAM_LIMIT);
             for(String part : parts) {
@@ -65,7 +70,7 @@ public class Request {
                 }
             }
         }
-        this.params = null;
+
     }
 
     public HashMap<String, String> getParams() { return params; }

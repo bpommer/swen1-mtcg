@@ -40,13 +40,13 @@ public class SessionRepository {
             try {
                 // System.out.println(hashPair[0] + " " + hashPair[1] + " " + username);
                 PreparedStatement stmt = this.transactionUnit.prepareStatement("""
-                        INSERT INTO profile(id, username, password, salt, coins, playcount, elo, token, stack, deck, bio, image, wins, lastlogin, name)
-                        VALUES (DEFAULT, ?, ?, ?, DEFAULT, DEFAULT, DEFAULT, ?, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT)
+                        INSERT INTO profile VALUES
+                        (DEFAULT, ?, ?, ?, DEFAULT, DEFAULT, DEFAULT, ?, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT)
                        """);
 
 
                 if(hashPair.get("password") == null || hashPair.get("salt") == null) {
-                    return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Internal server error");
+                    throw new DbAccessException("User could not be created");
                 }
 
                 stmt.setString(1, username);
@@ -56,9 +56,9 @@ public class SessionRepository {
                 stmt.setNull(4, Types.VARCHAR);
 
                 stmt.executeUpdate();
-                return new Response(HttpStatus.CREATED, ContentType.TEXT, "User successfully created");
+                return new Response(HttpStatus.CREATED, ContentType.TEXT, "User successfully created\n");
             } catch(SQLException e) {
-                throw new DbAccessException("User could not be created");
+                throw new DbAccessException("User could not be created" , e);
             }
     }
     public Response loginUser(User user) {
@@ -76,6 +76,7 @@ public class SessionRepository {
             PreparedStatement stmt = this.transactionUnit.prepareStatement(tokenQuery);
             stmt.setString(1, hashedToken);
             stmt.setInt(2, user.getId());
+            stmt.executeUpdate();
 
         } catch (SQLException e) {
             throw new DbAccessException(e);
@@ -91,40 +92,6 @@ public class SessionRepository {
 
 
 
-    public Response loginUser(String username) {
-
-            String newToken = username + "-mtcgToken";
-            String hashedToken = HashGenerator.generateHash(newToken);
-
-            String tokenQuery = """
-                    UPDATE profile
-                    SET token = ?
-                    WHERE username = ?""";
-
-            try {
-                PreparedStatement stmt = this.transactionUnit.prepareStatement(tokenQuery);
-                stmt.setString(1, hashedToken);
-                stmt.setString(2, username);
-                stmt.executeUpdate();
-            } catch(SQLException e) {
-                throw new DbAccessException("Error in login");
-            }
-
-            JSONObject response = new JSONObject();
-            response.put("token", newToken);
-            return new Response(HttpStatus.OK, ContentType.JSON, response.toString());
-
-
-
-
-
-
-
-
-
-
-
-    }
 
 
 
@@ -133,7 +100,7 @@ public class SessionRepository {
 
         User searchUser = fetchUserFromName(username);
         if(searchUser == null) {
-            return new Response(HttpStatus.NOT_FOUND, ContentType.TEXT, "User not found");
+            return new Response(HttpStatus.NOT_FOUND, ContentType.TEXT, "User not found.\n");
         }
 
         String query = "UPDATE profile SET name = ?, bio = ?, image = ? WHERE username = ?";
@@ -141,18 +108,19 @@ public class SessionRepository {
         try (PreparedStatement stmt = this.transactionUnit.prepareStatement(query)) {
             stmt.setString(1, name);
             stmt.setString(2, bio);
-            stmt.setString(4, image);
+            stmt.setString(3, image);
             stmt.setString(4, username);
             stmt.executeUpdate();
-            return new Response(HttpStatus.OK, ContentType.TEXT, "User successfully updated.");
+            return new Response(HttpStatus.OK, ContentType.TEXT, "User successfully updated.\n");
         } catch (SQLException e) {
-            e.printStackTrace();
-            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Internal server error.");
+            throw new DbAccessException("Error while updating user", e);
         }
     }
 
     // Fetch user data from token
-    // Returns null if token is invalid or user does not exist
+    // Returns null if:
+    // - Token is invalid
+    // - User is not logged in
     public static User fetchUserFromToken(String token) {
 
         if(token == null || token.isEmpty()) {
@@ -164,6 +132,8 @@ public class SessionRepository {
         if(!splitToken[0].equals("Bearer") ) {
             return null;
         }
+
+
 
         String tokenHash = HashGenerator.generateHash(splitToken[1]);
         String query = "SELECT * FROM profile WHERE token = ?";

@@ -10,8 +10,9 @@ public class TradingDeal {
     private String cardid;
     private String type;
     private float mindamage;
+    @Getter @Setter
     private Integer ownerId;
-    @Setter
+    @Getter @Setter
     private JSONObject targetCard = null;
 
     public TradingDeal(String tradeid, String cardid, String type, float mindamage) {

@@ -22,41 +22,41 @@ public class BattleCardFactoryTest {
             .put("Name", "WaterGoblin").put("Id", "b2237eca-0271-43bd-87f6-b22f70d42ca4").put("Damage", 11.0);
 
 
-    JSONObject testMonster4 = new JSONObject()
+    JSONObject testSpell1 = new JSONObject()
             .put("Name", "FireSpell").put("Id", "dcd93250-25a7-4dca-85da-cad2789f7198").put("Damage", 23.0);
 
 
     @Test
     public void defaultInference() {
         BattleCard testCard = factory.buildBattleCard(testMonster1);
-        assertEquals(1, testCard.getElementId());
-        assertNull(testCard.getSpecialId());
-        assertEquals(1, testCard.getTypeId());
+        assertEquals("Normal", testCard.getProperties().get("Element"));
+        assertNull(testCard.getProperties().get("Special"));
+        assertEquals("Monster", testCard.getProperties().get("Type"));
 
     }
 
     @Test
     public void specialMonsterDefaultType() {
         BattleCard testCard = factory.buildBattleCard(testMonster2);
-        assertEquals(1, testCard.getElementId());
-        assertEquals(2, testCard.getSpecialId());
-        assertEquals(1, testCard.getTypeId());
+        assertEquals("Normal", testCard.getProperties().get("Element"));
+        assertEquals("Dragon", testCard.getProperties().get("Special"));
+        assertEquals("Monster", testCard.getProperties().get("Type"));
     }
 
     @Test
     public void testElementInference() {
-        BattleCard testCard = factory.buildBattleCard(testMonster2);
-        assertEquals(1, testCard.getElementId());
-        assertEquals(2, testCard.getSpecialId());
-        assertEquals(1, testCard.getTypeId());
+        BattleCard testCard = factory.buildBattleCard(testMonster3);
+        assertEquals("Water", testCard.getProperties().get("Element"));
+        assertEquals("Goblin", testCard.getProperties().get("Special"));
+        assertEquals("Monster", testCard.getProperties().get("Type"));
     }
 
     @Test
     public void testCardTypeInference() {
-        BattleCard testCard = factory.buildBattleCard(testMonster4);
-        assertEquals(3, testCard.getElementId());
-        assertNull(testCard.getSpecialId());
-        assertEquals(2, testCard.getTypeId());
+        BattleCard testCard = factory.buildBattleCard(testSpell1);
+        assertEquals("Fire", testCard.getProperties().get("Element"));
+        assertNull(testCard.getProperties().get("Special"));
+        assertEquals("Spell", testCard.getProperties().get("Type"));
 
     }
 

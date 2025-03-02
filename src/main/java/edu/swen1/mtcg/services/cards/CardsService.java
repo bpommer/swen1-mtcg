@@ -30,28 +30,19 @@ public class CardsService implements IService {
             User foundUser = SessionRepository.fetchUserFromToken(authToken);
 
             if (foundUser == null) {
-                return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Access token missing or invalid");
+                return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Access token missing or invalid.\n");
             }
 
             JSONArray userCards = foundUser.getAllCards();
 
             if (userCards.isEmpty()) {
-                return new Response(HttpStatus.NO_CONTENT, ContentType.TEXT, HttpStatus.NO_CONTENT.statusMessage);
+                return new Response(HttpStatus.NO_CONTENT, ContentType.TEXT, "The user has no cards.\n");
             } else {
                 return new Response(HttpStatus.OK, ContentType.JSON, userCards.toString());
             }
         }
 
-            /*else if(path.size() == 2) {
-                System.out.println("Endpoint: " + path.get(0) + " " + path.get(1));
-                Card card = CardDataRepository.getCardData(path.get(1));
-
-                if(card == null) { return new Response(HttpStatus.NOT_FOUND, ContentType.TEXT, "Card not found"); }
-
-                return new Response(HttpStatus.OK, ContentType.JSON, card.toString());
-            }*/
-
-        return new Response(HttpStatus.NOT_IMPLEMENTED, ContentType.TEXT, "Not implemented");
+        return new Response(HttpStatus.NOT_IMPLEMENTED, ContentType.TEXT, "Not implemented\n");
     }
 
 }

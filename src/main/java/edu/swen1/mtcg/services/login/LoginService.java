@@ -43,13 +43,17 @@ public class LoginService implements IService {
             String password = credentials.getString("Password");
             User foundUser = SessionRepository.fetchUserFromName(username);
 
+
             // Check if username exists
             if(foundUser == null) {
                 return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Invalid username/password provided");
             }
 
+            String saltedPassword = password + foundUser.getSalt();
+
             // Check for correct password
-            String passwordHashed = HashGenerator.generateHash(password + foundUser.getSalt());
+            String passwordHashed = HashGenerator.generateHash(saltedPassword);
+
             if(passwordHashed == null || !passwordHashed.equals(foundUser.getPassword())) {
                 return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Invalid username/password provided");
             } else {
