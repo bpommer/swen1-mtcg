@@ -31,6 +31,9 @@ import static edu.swen1.mtcg.services.db.repository.SessionRepository.fetchUserF
 
 public class TradingService implements IService {
     private final String ID_PATTERN_STRING = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$";
+    private final TradingController controller = new TradingController();
+
+
 
     @Override
     public Response handleRequest(Request request) {
@@ -38,14 +41,12 @@ public class TradingService implements IService {
         String token = request.getHeader("Authorization");
         HashMap<String, String> params = request.getParams();
         User foundUser = fetchUserFromToken(token);
-        TradingController controller = new TradingController();
 
         if (foundUser == null) {
             return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Access token missing or invalid");
         }
 
         if(request.getMethod() == RestMethod.GET) {
-
             return controller.getTrades();
         }
 
@@ -143,9 +144,6 @@ public class TradingService implements IService {
                             "The offered card is not owned by the user, or the requirements are not met (Type, MinimumDamage), or the offered card is locked in the deck, or the user tries to trade with self\n");
 
                 }
-
-
-
 
             }
 

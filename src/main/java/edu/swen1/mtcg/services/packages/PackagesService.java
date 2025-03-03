@@ -25,18 +25,15 @@ import java.util.regex.Pattern;
 public class PackagesService implements IService {
 
     private final String ID_PATTERN_STRING = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$";
-    private final PackageController controller;
     private final int PACKAGE_SIZE = 5;
-
-    public PackagesService() { this.controller = new PackageController(); }
+    private final PackageController controller = new PackageController();
 
     @Override
     public Response handleRequest(Request request) {
 
         if(request.getMethod() == RestMethod.POST) {
 
-            String requestToken  = request.getHeader("Authorization");
-            User foundUser = SessionRepository.fetchUserFromToken(requestToken);
+            User foundUser = SessionRepository.fetchUserFromToken(request.getHeader("Authorization"));
 
             if(foundUser != null && foundUser.getUsername().equals("admin")) {
 
