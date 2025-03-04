@@ -46,7 +46,7 @@ public class LoginService implements IService {
 
             // Check if username exists
             if(foundUser == null) {
-                return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Invalid username/password provided");
+                return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Invalid username/password provided\n");
             }
 
             String saltedPassword = password + foundUser.getSalt();
@@ -62,9 +62,8 @@ public class LoginService implements IService {
 
         }
 
-        else {
-            return new Response(HttpStatus.NOT_IMPLEMENTED, ContentType.TEXT, "Not implemented");
-        }
+        return new Response(HttpStatus.NOT_IMPLEMENTED, ContentType.TEXT, "Not implemented.\n");
+
 
     }
 

@@ -83,8 +83,7 @@ public class PackagesService implements IService {
                 return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Access token is missing or invalid");
             }
         }
-        else {
-            return new Response(HttpStatus.NOT_IMPLEMENTED, ContentType.TEXT, "Not implemented");
-        }
+        return new Response(HttpStatus.NOT_IMPLEMENTED, ContentType.TEXT, "Not implemented.\n");
+
     }
 }

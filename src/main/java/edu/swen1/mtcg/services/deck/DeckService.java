@@ -162,9 +162,9 @@ public class DeckService implements IService {
 
 
         }
-        else {
-            return new Response(HttpStatus.NOT_IMPLEMENTED, ContentType.TEXT, "Not implemented");
-        }
+
+        return new Response(HttpStatus.NOT_IMPLEMENTED, ContentType.TEXT, "Not implemented.\n");
+
 
     }
 }

@@ -89,7 +89,7 @@ public class DeckRepository implements IQueryBuilder {
             throw new DbAccessException("Could not update deck", e);
         }
 
-        return new Response(HttpStatus.OK, ContentType.TEXT, "The deck has been successfully configured");
+        return new Response(HttpStatus.OK, ContentType.TEXT, "The deck has been successfully configured.\n");
 
     }
 

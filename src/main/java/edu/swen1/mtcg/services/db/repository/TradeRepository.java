@@ -5,6 +5,7 @@ import edu.swen1.mtcg.http.HttpStatus;
 import edu.swen1.mtcg.server.Response;
 import edu.swen1.mtcg.services.db.dbaccess.DbAccessException;
 import edu.swen1.mtcg.services.db.dbaccess.TransactionUnit;
+import edu.swen1.mtcg.services.db.models.Card;
 import edu.swen1.mtcg.services.db.models.TradingDeal;
 import edu.swen1.mtcg.services.db.models.User;
 import org.json.JSONArray;
@@ -55,10 +56,6 @@ public class TradeRepository {
         } catch (SQLException e) {
             throw new DbAccessException("Could not query existing trades", e);
         }
-
-
-
-
 
         // Check if user owns card by querying stack
         String objString = null;
@@ -148,7 +145,26 @@ public class TradeRepository {
         } catch (SQLException e) {
             throw new DbAccessException("Could not insert new trade", e);
         }
-        return new Response(HttpStatus.CREATED, ContentType.TEXT, "Trading deal successfully created");
+
+        Card addedCard = new Card(new JSONObject(objString));
+
+        String tradeCreatedLog = new StringBuilder()
+                .append("\n")
+                .append(user.getUsername())
+                .append(": added ")
+                .append(addedCard.getName())
+                .append("(")
+                .append(addedCard.getDamage())
+                .append(" damage) in the store and wants \"")
+                .append(newDeal.getType().toUpperCase())
+                .append(" with min ")
+                .append(newDeal.getMindamage())
+                .append(" damage\".\n")
+                .toString();
+
+        System.out.println(tradeCreatedLog);
+
+        return new Response(HttpStatus.CREATED, ContentType.TEXT, "Trading deal successfully created.\n");
     }
 
     public Response deleteTrade(User user, String tradeId) {
@@ -206,7 +222,7 @@ public class TradeRepository {
             throw new DbAccessException(e);
         }
 
-        return new Response(HttpStatus.OK, ContentType.TEXT, "Trading deal successfully deleted");
+        return new Response(HttpStatus.OK, ContentType.TEXT, "Trading deal successfully deleted.\n");
 
     }
     public Response executeTrade(User user, JSONObject card, String tradeId) {
@@ -265,9 +281,23 @@ public class TradeRepository {
             throw new DbAccessException(e);
         }
 
+        Card givenCard = new Card(new JSONObject(card.toString()));
+
+        String tradeExecutionLog = new StringBuilder()
+                .append("\n")
+                .append(user.getUsername())
+                .append(": accepts Trade with \"")
+                .append(givenCard.getName())
+                .append(" (")
+                .append(givenCard.getDamage())
+                .append(" damage)\".\n")
+                .toString();
+
+        System.out.println(tradeExecutionLog);
+
 
         return new Response(HttpStatus.OK, ContentType.TEXT,
-                "Trading deal successfully executed.");
+                "Trading deal successfully executed.\n");
     }
 
 
@@ -298,7 +328,7 @@ public class TradeRepository {
 
                 return new Response(HttpStatus.OK, ContentType.JSON, jsonArray.toString());
             } else {
-                return new Response(HttpStatus.NO_CONTENT, ContentType.TEXT, "No trading deals available");
+                return new Response(HttpStatus.NO_CONTENT, ContentType.TEXT, "No trading deals available.\n");
             }
 
         } catch (SQLException e) {

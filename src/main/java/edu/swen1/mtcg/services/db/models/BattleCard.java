@@ -2,6 +2,7 @@ package edu.swen1.mtcg.services.db.models;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
@@ -32,6 +33,30 @@ public class BattleCard extends Card {
         this.specialId = card.getSpecialId();
         this.elementId = card.getElementId();
         this.properties = card.getProperties();
+    }
+
+    public BattleCard(String id, String type, String name,
+                      float damage, String element, String special) {
+        super(id, name, damage);
+        properties.put("Type", type);
+        if(special != null) {
+            properties.put("Special", special);
+        } else {
+            properties.put("Special", null);
+        }
+        properties.put("Element", element);
+    }
+
+    public JSONObject cardExtendedInfo() {
+        JSONObject json = this.toJSON();
+        json.put("Type", properties.get("Type"));
+        if(properties.get("Special") != null) {
+            json.put("Special", properties.get("Special"));
+        } else {
+            json.put("Special", JSONObject.NULL);
+        }
+        json.put("Element", properties.get("Element"));
+        return json;
     }
 
 

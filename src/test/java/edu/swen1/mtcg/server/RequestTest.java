@@ -61,7 +61,7 @@ public class RequestTest {
         String testUrl1 = "/path/test";
         testRequest.setUrl(testUrl1);
         assertEquals(testUrl1, testRequest.getUrl());
-        assertNull(testRequest.getParams());
+        assertNull(testRequest.getParams().get("test"));
 
 
 

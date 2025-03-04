@@ -18,9 +18,6 @@ public class RequestBuilderTest {
 
     private BufferedReader testReader;
 
-    InputStream inputStream;
-
-    // Request templates
 
     // Properly formatted request
     String testRequest1 = new StringBuilder()
@@ -82,7 +79,7 @@ public class RequestBuilderTest {
         assertEquals("text/plain", res.getHeader("Content-Type"));
         assertEquals("14", res.getHeader("Content-Length"));
         assertEquals("testToken", res.getHeader("Authorization"));
-        assertEquals("params=testparam", res.getParams());
+        assertEquals("testparam", res.getParams().get("params"));
     }
 
 

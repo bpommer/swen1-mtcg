@@ -26,10 +26,13 @@ public class StatsService implements IService {
 
             JSONObject statsJson = foundUser.getUserStats();
 
+
+
             return new Response(HttpStatus.OK, ContentType.JSON, statsJson.toString());
-        } else {
-            return new Response(HttpStatus.NOT_IMPLEMENTED, ContentType.TEXT, "Not implemented");
         }
+
+        return new Response(HttpStatus.NOT_IMPLEMENTED, ContentType.TEXT, "Not implemented.\n");
+
 
     }
 }

@@ -3,15 +3,21 @@ package edu.swen1.mtcg.services.registration;
 import edu.swen1.mtcg.http.ContentType;
 import edu.swen1.mtcg.http.HttpStatus;
 import edu.swen1.mtcg.http.RestMethod;
+import edu.swen1.mtcg.server.HeaderMap;
 import edu.swen1.mtcg.server.Request;
 import edu.swen1.mtcg.server.Response;
+import edu.swen1.mtcg.services.db.models.User;
+import edu.swen1.mtcg.services.db.repository.SessionRepository;
+import edu.swen1.mtcg.utils.RequestSchemaChecker;
 import org.json.JSONObject;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.mockito.*;
 
 import java.lang.reflect.Field;
+import java.sql.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -26,40 +32,37 @@ public class RegistrationServiceTest {
     @InjectMocks
     RegistrationController mockController = mock(RegistrationController.class);
 
+    @Mock public static MockedStatic<RequestSchemaChecker> requestSchemaChecker;
+
+    @Mock public static MockedStatic<SessionRepository> sessionRepository;
+
+
+    @Mock Request mockRequest = mock(Request.class);
+
+    @Mock User mockUser = mock(User.class);
+
+    @Mock
+    HeaderMap mockHeaderMap = mock(HeaderMap.class);
+
 
     String registrationTestBody = new JSONObject()
             .put("Username", "testUser")
             .put("Password", "testPassword")
             .toString();
 
-    String registrationInvalidType1 = new JSONObject()
-            .put("Username", 123)
-            .put("Password", "testPassword")
-            .toString();
 
-    String registrationInvalidType2 = new JSONObject()
-            .put("Username", "testUser")
-            .put("Password", true)
-            .toString();
-
-    String registrationInvalidType3 = new JSONObject()
-            .put("Username", 123.45)
-            .toString();
-
-    String updateTestBody1 = new JSONObject()
+    String updateTestBody = new JSONObject()
             .put("Name", "test")
             .put("Bio", "testBio")
             .put("Image", "testImage")
             .toString();
 
-    // empty field
-    String updateTestBody2 = new JSONObject()
-            .put("Name", "")
-            .put("Bio", "testBio")
-            .put("Image", "testImage")
-            .toString();
 
-
+    @BeforeAll
+    static void setUp() {
+        requestSchemaChecker = Mockito.mockStatic(RequestSchemaChecker.class);
+        sessionRepository = Mockito.mockStatic(SessionRepository.class);
+    }
 
     @BeforeEach
     public void setup() {
@@ -84,6 +87,13 @@ public class RegistrationServiceTest {
 
     }
 
+    @AfterAll
+    public static void tearDown() {
+        requestSchemaChecker.close();
+        sessionRepository.close();
+
+    }
+
 
     // Test user registration
     @Test
@@ -99,11 +109,18 @@ public class RegistrationServiceTest {
                 )
         );
 
-        Request testRequest = new Request();
-        testRequest.setMethod(RestMethod.POST);
-        testRequest.setBody(registrationTestBody);
 
-        Response res = service.handleRequest(testRequest);
+
+        requestSchemaChecker.when(() -> RequestSchemaChecker.JsonKeyValueCheck(any(), any()))
+                .thenReturn(true);
+
+        sessionRepository.when(() -> SessionRepository.fetchUserFromName(any()))
+                        .thenReturn(null);
+
+        when(mockRequest.getMethod()).thenReturn(RestMethod.POST);
+        when(mockRequest.getBody()).thenReturn(registrationTestBody);
+
+        Response res = service.handleRequest(mockRequest);
         assertEquals(HttpStatus.CREATED.statusCode, res.getStatusCode());
     }
 
@@ -112,31 +129,40 @@ public class RegistrationServiceTest {
     @Test
     public void failUserRegistration() {
 
-        Request testRequest = new Request();
-        testRequest.setMethod(RestMethod.POST);
-        testRequest.setBody(registrationInvalidType1);
 
-        Response res = service.handleRequest(testRequest);
+        // TEST: improper formatting of json
+        requestSchemaChecker.when(() -> RequestSchemaChecker.JsonKeyValueCheck(any(), any()))
+                .thenReturn(false);
+
+        sessionRepository.when(() -> SessionRepository.fetchUserFromName(any()))
+                .thenReturn(new User());
+
+
+        when(mockRequest.getMethod()).thenReturn(RestMethod.POST);
+        when(mockRequest.getBody()).thenReturn(registrationTestBody);
+
+        Response res = service.handleRequest(mockRequest);
         assertEquals(HttpStatus.BAD_REQUEST.statusCode, res.getStatusCode());
 
-        testRequest = new Request();
-        testRequest.setMethod(RestMethod.POST);
-        testRequest.setBody(registrationInvalidType2);
+        // TEST: User already exists
+        requestSchemaChecker.when(() -> RequestSchemaChecker.JsonKeyValueCheck(any(), any()))
+                .thenReturn(true);
 
-        res = service.handleRequest(testRequest);
-        assertEquals(HttpStatus.BAD_REQUEST.statusCode, res.getStatusCode());
 
-        testRequest = new Request();
-        testRequest.setMethod(RestMethod.POST);
-        testRequest.setBody(registrationInvalidType3);
-
-        res = service.handleRequest(testRequest);
-        assertEquals(HttpStatus.BAD_REQUEST.statusCode, res.getStatusCode());
+        res = service.handleRequest(mockRequest);
+        assertEquals(HttpStatus.CONFLICT.statusCode, res.getStatusCode());
 
     }
 
     @Test
     public void testUserUpdate() {
+
+        // TEST: update matching user
+        requestSchemaChecker.when(() -> RequestSchemaChecker.JsonKeyValueCheck(any(), any()))
+                .thenReturn(true);
+
+        sessionRepository.when(() -> SessionRepository.fetchUserFromToken(any()))
+                .thenReturn(mockUser);
 
         when(mockController.updateUser(any(), any(), any(), any()))
                 .thenReturn(new Response(
@@ -146,15 +172,61 @@ public class RegistrationServiceTest {
                         )
                 );
 
-        Request testRequest = new Request();
-        testRequest.setMethod(RestMethod.PUT);
-        testRequest.setBody(updateTestBody1);
-        testRequest.setPath("/users/testUser");
+        // Prepare request mock
+        List<String> testList = new ArrayList<>(Arrays.asList("users", "kienboeck"));
 
-        Response res = service.handleRequest(testRequest);
+        when(mockRequest.getMethod()).thenReturn(RestMethod.PUT);
+        when(mockRequest.getBody()).thenReturn(updateTestBody);
+        when(mockRequest.getPathParts()).thenReturn(testList);
+
+        when(mockRequest.getHeaderMap()).thenReturn(mockHeaderMap);
+        when(mockHeaderMap.getAuthHeader()).thenReturn("Bearer kienboeck-mtcgToken");
+
+        when(mockUser.getUsername()).thenReturn("kienboeck");
+
+        Response res = service.handleRequest(mockRequest);
+        assertEquals(HttpStatus.OK.statusCode, res.getStatusCode());
+
+        // TEST: update user as admin
+        when(mockUser.getUsername()).thenReturn("admin");
         assertEquals(HttpStatus.OK.statusCode, res.getStatusCode());
 
 
+
+    }
+
+    @Test
+    public void failUserUpdate() {
+
+        // TEST: Username does not match
+        requestSchemaChecker.when(() -> RequestSchemaChecker.JsonKeyValueCheck(any(), any()))
+                .thenReturn(true);
+
+        sessionRepository.when(() -> SessionRepository.fetchUserFromToken(any()))
+                .thenReturn(mockUser);
+
+        when(mockController.updateUser(any(), any(), any(), any()))
+                .thenReturn(new Response(
+                                HttpStatus.OK,
+                                ContentType.TEXT,
+                                "User sucessfully updated."
+                        )
+                );
+
+        // Prepare request mock
+        List<String> testList = new ArrayList<>(Arrays.asList("users", "kienboeck"));
+
+        when(mockRequest.getMethod()).thenReturn(RestMethod.PUT);
+        when(mockRequest.getBody()).thenReturn(updateTestBody);
+        when(mockRequest.getPathParts()).thenReturn(testList);
+
+        when(mockRequest.getHeaderMap()).thenReturn(mockHeaderMap);
+        when(mockHeaderMap.getAuthHeader()).thenReturn("Bearer kienboeck-mtcgToken");
+
+        when(mockUser.getUsername()).thenReturn("brian");
+
+        Response res = service.handleRequest(mockRequest);
+        assertEquals(HttpStatus.UNAUTHORIZED.statusCode, res.getStatusCode());
 
 
 

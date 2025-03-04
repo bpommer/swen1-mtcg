@@ -82,7 +82,7 @@ public class SessionRepository {
             throw new DbAccessException(e);
         }
 
-        String resBody = "{ " + token + " }";
+        String resBody = "\"" + token + "\"";
 
         return new Response(HttpStatus.OK, ContentType.JSON, resBody);
 
@@ -292,5 +292,61 @@ public class SessionRepository {
 
 
     }
+
+    public Response updateElo(User victory, User defeat, String battleLog) {
+
+        String addEloQuery = """
+        UPDATE profile
+        SET elo = (elo + 3),
+        wins = (wins + 1),
+        playcount = (playcount + 1)
+        WHERE id = ?""";
+
+        try {
+            PreparedStatement stmt = transactionUnit.prepareStatement(addEloQuery);
+            stmt.setInt(1, victory.getId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DbAccessException("Error while updating elo", e);
+        }
+
+        String removeEloQuery = """
+                UPDATE profile
+                SET elo = GREATEST((elo - 5), 0),
+                playcount = (playcount + 1)
+                WHERE id = ?""";
+
+        try {
+            PreparedStatement stmt = transactionUnit.prepareStatement(removeEloQuery);
+            stmt.setInt(1, defeat.getId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DbAccessException("Error while updating elo", e);
+        }
+
+        return new Response(HttpStatus.OK, ContentType.TEXT, battleLog);
+
+    }
+
+    public Response updateTie(User player1, User player2, String battleLog) {
+        String tieQuery = """
+                UPDATE profile SET playcount = (playcount + 1)
+                WHERE id IN (?, ?)
+                """;
+
+        try {
+            PreparedStatement stmt = transactionUnit.prepareStatement(tieQuery);
+            stmt.setInt(1, player1.getId());
+            stmt.setInt(2, player2.getId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DbAccessException("Error while updating tie", e);
+        }
+
+        return new Response(HttpStatus.OK, ContentType.TEXT, battleLog);
+
+
+    }
+
 
 }

@@ -78,12 +78,6 @@ public class TradingService implements IService {
 
                 newDeal.setOwnerId(foundUser.getId());
 
-                System.out.println("Id: " + newDeal.getTradeid());
-                System.out.println("CardToTrade: " + newDeal.getCardid());
-                System.out.println("Type: " + newDeal.getType());
-                System.out.println("MinimumDamage: " + newDeal.getMindamage());
-
-
                 return controller.newTradeOffer(foundUser, newDeal);
 
             }
@@ -107,14 +101,13 @@ public class TradingService implements IService {
                 try {
                     cardId = (String) new JSONTokener(request.getBody()).nextValue();
                 } catch (Exception e) {
-                    return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Bad request");
+                    return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Bad request.\n");
                 }
 
                 // Fetch stack from user and query for matching card
                 JSONArray userStackArray = foundUser.getStack();
                 boolean cardFound = false;
                 JSONObject offeredCard = null;
-
 
                 // Check if user owns card and if it matches requirements
                 for (int i = 0; i < userStackArray.length(); i++) {
@@ -124,7 +117,7 @@ public class TradingService implements IService {
 
                     if(tempId.equals(cardId)) {
                         // Use BattleCardFactory to infer card type
-                        BattleCard tempCard = new BattleCardFactory().buildBattleCard(tempObj);
+                        BattleCard tempCard = BattleCardFactory.buildBattleCard(tempObj);
                         if(tempCard != null && tempCard.getDamage() >= deal.getMindamage()
                         && tempCard.getProperties().get("Type").equalsIgnoreCase(deal.getType())) {
                             offeredCard = new JSONObject(tempObj.toString());
@@ -156,8 +149,6 @@ public class TradingService implements IService {
                 return controller.revokeTradeOffer(foundUser, request.getPathParts().get(1));
             }
 
-        } else {
-            return new Response(HttpStatus.NOT_IMPLEMENTED, ContentType.TEXT, HttpStatus.NOT_IMPLEMENTED.statusMessage);
         }
         return new Response(HttpStatus.NOT_IMPLEMENTED, ContentType.TEXT, HttpStatus.NOT_IMPLEMENTED.statusMessage);
 

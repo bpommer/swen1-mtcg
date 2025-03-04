@@ -28,15 +28,14 @@ public class ScoreboardService implements IService {
             JSONArray board = SessionRepository.fetchScoreboard();
 
             if(board == null || board.length() == 0) {
-                return new Response(HttpStatus.OK, ContentType.JSON, new JSONArray().toString());
+                return new Response(HttpStatus.NO_CONTENT, ContentType.JSON, new JSONArray().toString());
             }
             return new Response(HttpStatus.OK, ContentType.JSON, board.toString());
 
 
 
-        } else {
-            return new Response(HttpStatus.NOT_IMPLEMENTED, ContentType.TEXT, "Not implemented");
         }
+        return new Response(HttpStatus.NOT_IMPLEMENTED, ContentType.TEXT, "Not implemented.\n");
 
     }
 

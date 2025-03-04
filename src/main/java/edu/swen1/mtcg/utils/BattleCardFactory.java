@@ -8,12 +8,12 @@ import java.util.Map;
 
 public class BattleCardFactory {
 
-    public final Map<String, Integer> elementMap = Map.of(
+    public static final Map<String, Integer> elementMap = Map.of(
             "Water", 2,
             "Fire", 3
     );
 
-    public final Map<String, Integer> specialMap = Map.of(
+    public static final Map<String, Integer> specialMap = Map.of(
             "Goblin", 1,
             "Dragon", 2,
             "Wizzard", 3,
@@ -23,12 +23,12 @@ public class BattleCardFactory {
             "FireElf", 7
 
     );
-    public final Map<String, Integer> cardTypeMap = Map.of(
+    public static final Map<String, Integer> cardTypeMap = Map.of(
             "Spell", 2
     );
 
 
-    public BattleCard buildBattleCard(JSONObject rawCard) {
+    public static BattleCard buildBattleCard(JSONObject rawCard) {
 
         BattleCard card = new BattleCard(rawCard);
 
@@ -41,7 +41,7 @@ public class BattleCardFactory {
         return card;
     }
 
-    private void inferElementFromName(BattleCard card, String name) {
+    private static void inferElementFromName(BattleCard card, String name) {
 
         for(String key : elementMap.keySet()) {
             if(name.contains(key)) {
@@ -55,7 +55,7 @@ public class BattleCardFactory {
     }
 
 
-    private void inferSpecialFromName(BattleCard card, String name) {
+    private static void inferSpecialFromName(BattleCard card, String name) {
         for(String key : specialMap.keySet()) {
             if(name.contains(key)) {
                 card.putProperty("Special", key);
@@ -66,7 +66,7 @@ public class BattleCardFactory {
         card.setSpecialId(null);
     }
 
-    private void inferCardTypeFromName(BattleCard card, String name) {
+    private static void inferCardTypeFromName(BattleCard card, String name) {
         for(String key : cardTypeMap.keySet()) {
             if(name.contains(key)) {
                 card.putProperty("Type", key);

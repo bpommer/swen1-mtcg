@@ -1,6 +1,7 @@
 package edu.swen1.mtcg;
 
 import edu.swen1.mtcg.server.Server;
+import edu.swen1.mtcg.services.battles.BattlesService;
 import edu.swen1.mtcg.services.cards.CardsService;
 import edu.swen1.mtcg.services.deck.DeckService;
 import edu.swen1.mtcg.services.packages.PackagesService;
@@ -40,7 +41,7 @@ public class Main {
         router.newService("/stats", new StatsService());
         router.newService("/transactions", new TransactionsService());
         router.newService("/tradings", new TradingService());
-
+        router.newService("/battles", new BattlesService());
         return router;
 
     }

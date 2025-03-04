@@ -12,9 +12,8 @@ import edu.swen1.mtcg.services.db.repository.SessionRepository;
 import java.util.List;
 
 public class TransactionsService implements IService {
-    private final TransactionsController controller;
+    private final TransactionsController controller = new TransactionsController();
 
-    public TransactionsService() { this.controller = new TransactionsController(); }
 
     @Override
     public Response handleRequest(Request request) {
@@ -37,10 +36,8 @@ public class TransactionsService implements IService {
             }
 
 
-        } else {
-            return new Response(HttpStatus.NOT_IMPLEMENTED, ContentType.TEXT, HttpStatus.NOT_IMPLEMENTED.statusMessage);
         }
-
+        return new Response(HttpStatus.NOT_IMPLEMENTED, ContentType.TEXT, "Not implemented.\n");
 
     }
 }

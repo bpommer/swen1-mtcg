@@ -35,6 +35,26 @@ public class User {
 
     }
 
+    public User(User user) {
+        this.id = user.getId();
+        this.username = user.getUsername();
+        this.name = user.getName();
+        this.password = user.getPassword();
+        this.salt = user.getSalt();
+        this.coins = user.getCoins();
+        this.playCount = user.getPlayCount();
+        this.elo = user.getElo();
+        this.token = user.getToken();
+        this.stack = user.getStack().toString();
+        this.deck = user.getDeck().toString();
+        this.name = user.getName();
+        this.bio = user.getBio();
+        this.image = user.getImage();
+        this.wins = user.getWins();
+        this.lastLogin = user.getLastLogin();
+        this.tokenSalt = user.getTokenSalt();
+    }
+
 
     public User(Integer id, String username, String password, String salt,
                 Integer coins, Integer playCount, Integer elo, String token,
@@ -102,14 +122,39 @@ public class User {
     
     public JSONObject getUserData() {
         JSONObject userData = new JSONObject();
-        userData.put("Name", username);
-        userData.put("Bio", bio);
-        userData.put("Image", image);
+
+        if(name != null) {
+            userData.put("Name", name);
+        } else {
+            userData.put("Name", JSONObject.NULL);
+        }
+
+        if(bio != null) {
+            userData.put("Bio", bio);
+        } else {
+            userData.put("Bio", JSONObject.NULL);
+        }
+
+        if(image != null) {
+            userData.put("Image", image);
+        } else {
+            userData.put("Image", JSONObject.NULL);
+        }
+
         return userData;
     }
     
     public JSONObject getUserStats() {
         JSONObject userStats = new JSONObject();
+
+        if (this.name != null) {
+            userStats.put("Name", name);
+        } else {
+            userStats.put("Name", JSONObject.NULL);
+        }
+
+        userStats.put("Elo", elo);
+        userStats.put("Wins", wins);
 
         if((this.playCount - this.wins) < 0) {
             userStats.put("Losses", 0);
@@ -117,14 +162,7 @@ public class User {
             userStats.put("Losses", this.playCount - this.wins);
         }
 
-        userStats.put("Wins", wins);
-        userStats.put("Elo", elo);
 
-        if (this.name != null) {
-            userStats.put("Name", name);
-        } else {
-            userStats.put("Name", JSONObject.NULL);
-        }
 
 
         return userStats;

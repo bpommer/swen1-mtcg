@@ -4,6 +4,7 @@ import edu.swen1.mtcg.http.ContentType;
 import edu.swen1.mtcg.http.HttpStatus;
 import edu.swen1.mtcg.server.Response;
 import edu.swen1.mtcg.services.db.dbaccess.TransactionUnit;
+import edu.swen1.mtcg.services.db.models.BattleCard;
 import edu.swen1.mtcg.services.db.models.Card;
 import edu.swen1.mtcg.services.db.models.TradingDeal;
 import org.json.JSONArray;
@@ -47,14 +48,20 @@ public class CardDataRepository {
         TransactionUnit tempUnit = new TransactionUnit();
 
         String query = """
-                SELECT c.id, ct.type, c.damage FROM card c WHERE id = ?
-                INNER JOIN cardtype ct ON c.type = ct.id""";
+                SELECT c.id, c.name, c.damage
+                FROM card c
+                WHERE c.id = ?::uuid""";
 
         try(PreparedStatement stmt = tempUnit.prepareStatement(query)) {
             stmt.setString(1, id);
             ResultSet rs = stmt.executeQuery();
             if(rs.next()) {
-                Card card = new Card(rs.getString(1), rs.getString(2), rs.getFloat(3));
+                Card card = new BattleCard(
+                        rs.getString(1),
+                        rs.getString(2),
+                        rs.getFloat(3)
+                );
+
                 return card;
             } else {
                 return null;

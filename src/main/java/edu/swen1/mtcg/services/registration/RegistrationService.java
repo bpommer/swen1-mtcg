@@ -34,7 +34,7 @@ public class RegistrationService implements IService {
 
         if (request.getMethod() == RestMethod.POST) {
             if(!RequestSchemaChecker.JsonKeyValueCheck(request.getBody(), SchemaWhitelists.USER_CREDENTIALS)) {
-                return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Bad Request");
+                return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Bad Request.\n");
             }
 
             try {
@@ -78,15 +78,15 @@ public class RegistrationService implements IService {
                 ) {
                     return controller.getUser(targetUser);
                 } else {
-                    return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Authentication token required");
+                    return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Authentication token required.\n");
                 }
 
             }
             else if (path.size() == 2) {
-                return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Authentication token required");
+                return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Authentication token required.\n");
             }
             else {
-                return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Invalid request");
+                return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Invalid request.\n");
             }
 
         } else if (request.getMethod() == RestMethod.PUT) {
@@ -115,12 +115,12 @@ public class RegistrationService implements IService {
                 }
             }
             else {
-                return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Invalid request");
+                return new Response(HttpStatus.BAD_REQUEST, ContentType.TEXT, "Invalid request.\n");
             }
 
-        } else {
-            return new Response(HttpStatus.NOT_IMPLEMENTED, ContentType.TEXT, HttpStatus.NOT_IMPLEMENTED.statusMessage);
+
         }
+        return new Response(HttpStatus.NOT_IMPLEMENTED, ContentType.TEXT, "Not implemented.\n");
 
     }
 

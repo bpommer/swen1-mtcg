@@ -11,10 +11,7 @@ import edu.swen1.mtcg.services.registration.RegistrationService;
 import edu.swen1.mtcg.utils.HashGenerator;
 import edu.swen1.mtcg.utils.RequestSchemaChecker;
 import org.json.JSONObject;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
@@ -46,6 +43,20 @@ public class LoginServiceTest {
 
     User testUser;
 
+    @Mock
+    public static MockedStatic<RequestSchemaChecker> checkerStub;
+    @Mock
+    public static MockedStatic<SessionRepository> sessionRepositoryStub;
+    @Mock
+    public static MockedStatic<HashGenerator> hashGeneratorStub;
+
+    @BeforeAll
+    static void setup() {
+        checkerStub = Mockito.mockStatic(RequestSchemaChecker.class);
+        sessionRepositoryStub = Mockito.mockStatic(SessionRepository.class);
+        hashGeneratorStub = Mockito.mockStatic(HashGenerator.class);
+    }
+
     @BeforeEach
     public void setUp() {
         testUser = new User();
@@ -65,19 +76,21 @@ public class LoginServiceTest {
             throw new RuntimeException(e);
         }
 
-
-
     }
+
+    @AfterAll
+    static void tearDown() {
+        checkerStub.close();
+        sessionRepositoryStub.close();
+        hashGeneratorStub.close();
+    }
+
 
     @Test
     @DisplayName("Test correct password")
     public void testPasswordCheck() {
 
         try {
-            MockedStatic<RequestSchemaChecker> checkerStub = Mockito.mockStatic(RequestSchemaChecker.class);
-            MockedStatic<SessionRepository> sessionRepositoryStub = Mockito.mockStatic(SessionRepository.class);
-            MockedStatic<HashGenerator> hashGeneratorStub = Mockito.mockStatic(HashGenerator.class);
-
 
             // Insert password and salt in user model
             testUser.setPassword(testPasswordHash);
@@ -122,18 +135,12 @@ public class LoginServiceTest {
             testUser.setPassword(testPasswordHash);
             testUser.setSalt(testSalt);
 
-            // Create mocks for static methods used and define behavior
-            MockedStatic<RequestSchemaChecker> checkerStub = Mockito.mockStatic(RequestSchemaChecker.class);
-            MockedStatic<SessionRepository> sessionRepositoryStub = Mockito.mockStatic(SessionRepository.class);
-            MockedStatic<HashGenerator> hashGeneratorStub = Mockito.mockStatic(HashGenerator.class);
-
+            // Set static mock behavior
             when(mockController.login(any()))
                     .thenReturn(new Response(HttpStatus.OK, ContentType.TEXT, HttpStatus.OK.statusMessage));
 
-
             checkerStub.when(() -> RequestSchemaChecker.JsonKeyValueCheck(any(), any()))
                     .thenReturn(true);
-
 
             sessionRepositoryStub.when(() -> SessionRepository.fetchUserFromName(any()))
                     .thenReturn(testUser);
@@ -154,6 +161,7 @@ public class LoginServiceTest {
             Response res = loginService.handleRequest(testRequest);
             assertEquals(HttpStatus.UNAUTHORIZED.statusCode, res.getStatusCode());
         } catch (Exception e) {
+            e.printStackTrace();
             fail();
         }
     }
