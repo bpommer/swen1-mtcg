@@ -7,7 +7,6 @@ import edu.swen1.mtcg.server.Response;
 import edu.swen1.mtcg.services.db.dbaccess.TransactionUnit;
 import edu.swen1.mtcg.services.db.models.TradingDeal;
 import edu.swen1.mtcg.services.db.models.User;
-import edu.swen1.mtcg.services.db.repository.CardDataRepository;
 import edu.swen1.mtcg.services.db.repository.TradeRepository;
 import edu.swen1.mtcg.utils.Controller;
 import org.json.JSONObject;

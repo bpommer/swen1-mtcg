@@ -160,7 +160,8 @@ public class SessionRepository {
                         rs.getString(12),
                         rs.getString(13),
                         rs.getInt(14),
-                        rs.getString(15)
+                        rs.getInt(15),
+                        rs.getString(16)
                 );
             }
             return null;
@@ -198,7 +199,8 @@ public class SessionRepository {
                         rs.getString(12),
                         rs.getString(13),
                         rs.getInt(14),
-                        rs.getString(15)
+                        rs.getInt(15),
+                        rs.getString(16)
                 );
 
             } else {
@@ -221,23 +223,24 @@ public class SessionRepository {
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
             if(rs.next()) {
-            return new User(
-                    rs.getInt(1),
-                    rs.getString(2),
-                    rs.getString(3),
-                    rs.getString(4),
-                    rs.getInt(5),
-                    rs.getInt(6),
-                    rs.getInt(7),
-                    rs.getString(8),
-                    rs.getString(9),
-                    rs.getString(10),
-                    rs.getString(11),
-                    rs.getString(12),
-                    rs.getString(13),
-                    rs.getInt(14),
-                    rs.getString(15)
-            );
+                return new User(
+                        rs.getInt(1),
+                        rs.getString(2),
+                        rs.getString(3),
+                        rs.getString(4),
+                        rs.getInt(5),
+                        rs.getInt(6),
+                        rs.getInt(7),
+                        rs.getString(8),
+                        rs.getString(9),
+                        rs.getString(10),
+                        rs.getString(11),
+                        rs.getString(12),
+                        rs.getString(13),
+                        rs.getInt(14),
+                        rs.getInt(15),
+                        rs.getString(16)
+                );
             }
             return null;
 
@@ -264,7 +267,7 @@ public class SessionRepository {
 
             while(rs.next()) {
 
-                User user = new User(
+                User tempUser = new User(
                         rs.getInt(1),
                         rs.getString(2),
                         rs.getString(3),
@@ -279,10 +282,11 @@ public class SessionRepository {
                         rs.getString(12),
                         rs.getString(13),
                         rs.getInt(14),
-                        rs.getString(15)
+                        rs.getInt(15),
+                        rs.getString(16)
                 );
 
-                jsonArray.put(user.getUserStats());
+                jsonArray.put(tempUser.getUserStats());
 
             }
             return jsonArray;
@@ -313,7 +317,8 @@ public class SessionRepository {
         String removeEloQuery = """
                 UPDATE profile
                 SET elo = GREATEST((elo - 5), 0),
-                playcount = (playcount + 1)
+                playcount = (playcount + 1),
+                losses = (losses + 1)
                 WHERE id = ?""";
 
         try {

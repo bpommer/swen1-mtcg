@@ -13,6 +13,7 @@ import edu.swen1.mtcg.services.db.models.BattleCard;
 import edu.swen1.mtcg.services.db.models.TradingDeal;
 import edu.swen1.mtcg.services.db.models.User;
 
+import edu.swen1.mtcg.services.db.repository.SessionRepository;
 import edu.swen1.mtcg.services.db.repository.TradeRepository;
 import edu.swen1.mtcg.utils.BattleCardFactory;
 import edu.swen1.mtcg.utils.RequestSchemaChecker;
@@ -40,7 +41,7 @@ public class TradingService implements IService {
 
         String token = request.getHeader("Authorization");
         HashMap<String, String> params = request.getParams();
-        User foundUser = fetchUserFromToken(token);
+        User foundUser = SessionRepository.fetchUserFromToken(token);
 
         if (foundUser == null) {
             return new Response(HttpStatus.UNAUTHORIZED, ContentType.TEXT, "Access token missing or invalid");

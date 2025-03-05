@@ -35,15 +35,15 @@ public class BattlesService implements IService {
             try {
                 // Let only two threads pass and block the rest
 
-                synchronized (lock) {
-                    try {
-                        queueSemaphore.acquire();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                        return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Thread interrupted.\n");
-                    }
 
+                try {
+                    queueSemaphore.acquire();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Thread interrupted.\n");
                 }
+
+
 
                 // Check for each thread if requirements are met to enter battle
                 // Release a semaphore permit if checks fail for the user
@@ -82,7 +82,7 @@ public class BattlesService implements IService {
                 battlesCall = null;
                 battlesFuture = null;
 
-                queueSemaphore.release(2);
+                queueSemaphore.release();
 
                 return result;
 

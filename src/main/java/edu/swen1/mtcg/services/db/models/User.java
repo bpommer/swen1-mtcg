@@ -28,8 +28,8 @@ public class User {
     private String bio;
     private String image;
     private int wins;
+    private int losses;
     private String lastLogin;
-    private String tokenSalt;
 
     public User() {
 
@@ -52,14 +52,13 @@ public class User {
         this.image = user.getImage();
         this.wins = user.getWins();
         this.lastLogin = user.getLastLogin();
-        this.tokenSalt = user.getTokenSalt();
     }
 
 
     public User(Integer id, String username, String password, String salt,
                 Integer coins, Integer playCount, Integer elo, String token,
                 String stack, String deck, String name, String bio,
-                String image, int wins, String lastLogin) {
+                String image, int wins, int losses, String lastLogin) {
 
         this.id = id;
         this.username = username;
@@ -75,34 +74,9 @@ public class User {
         this.bio = bio;
         this.image = image;
         this.wins = wins;
+        this.losses = losses;
         this.lastLogin = lastLogin;
     }
-
-    public User(Integer id, String username, String password, String salt,
-                Integer coins, Integer playCount, Integer elo, String token,
-                String stack, String deck, String name, String bio,
-                String image, int wins, String lastLogin, String tokenSalt) {
-
-        this.id = id;
-        this.username = username;
-        this.password = password;
-        this.salt = salt;
-        this.coins = coins;
-        this.playCount = playCount;
-        this.elo = elo;
-        this.token = token;
-        this.stack = stack;
-        this.deck = deck;
-        this.name = name;
-        this.bio = bio;
-        this.image = image;
-        this.wins = wins;
-        this.lastLogin = lastLogin;
-        this.tokenSalt = tokenSalt;
-    }
-
-
-
 
 
     // Constructor for schema UserData
@@ -155,15 +129,7 @@ public class User {
 
         userStats.put("Elo", elo);
         userStats.put("Wins", wins);
-
-        if((this.playCount - this.wins) < 0) {
-            userStats.put("Losses", 0);
-        } else {
-            userStats.put("Losses", this.playCount - this.wins);
-        }
-
-
-
+        userStats.put("Losses", this.losses);
 
         return userStats;
     }

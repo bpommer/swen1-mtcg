@@ -74,34 +74,6 @@ public class CardDataRepository {
     }
 
 
-    public Response getTradeData() {
-        String query = """
-                SELECT t.id, t.owner, t.offer, ct.type, t.mindamage FROM trade t
-                INNER JOIN cardtype ct ON t.type = ct.id""";
-        try (PreparedStatement stmt = this.transactionUnit.prepareStatement(query))
-        {
-            ResultSet rs = stmt.executeQuery();
-            JSONArray trades = new JSONArray();
-
-            if(rs.next()) {
-                do {
-                    TradingDeal deal = new TradingDeal(rs.getString(1), rs.getString(3),
-                            rs.getString(4), rs.getFloat(5));
-                    trades.put(deal.toJSON());
-                } while (rs.next());
-            } else {
-                return new Response(HttpStatus.NO_CONTENT, ContentType.TEXT, "No trades found");
-            }
-
-            return new Response(HttpStatus.OK, ContentType.JSON, trades.toString());
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return new Response(HttpStatus.INTERNAL_SERVER_ERROR, ContentType.TEXT, "Internal server error");
-        }
-
-    }
-
 
 
 

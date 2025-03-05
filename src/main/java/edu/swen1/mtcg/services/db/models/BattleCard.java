@@ -8,8 +8,6 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import static edu.swen1.mtcg.services.db.repository.CardDataRepository.getBattleProperties;
-
 
 public class BattleCard extends Card {
 

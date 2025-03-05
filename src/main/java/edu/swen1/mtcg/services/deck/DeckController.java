@@ -4,15 +4,9 @@ import edu.swen1.mtcg.http.ContentType;
 import edu.swen1.mtcg.http.HttpStatus;
 import edu.swen1.mtcg.server.Response;
 import edu.swen1.mtcg.services.db.dbaccess.TransactionUnit;
-import edu.swen1.mtcg.services.db.models.Deck;
 import edu.swen1.mtcg.services.db.models.User;
 import edu.swen1.mtcg.services.db.repository.DeckRepository;
 import edu.swen1.mtcg.utils.Controller;
-import org.json.JSONArray;
-
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.HashMap;
 
 public class DeckController extends Controller {
 
